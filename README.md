@@ -4,6 +4,9 @@ No NuGet.org feed at this time. We are working on it.
 
 News
 ====
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/73ab9db4912449f28d961e3ddad189b1)](https://app.codacy.com/gh/Codeuctivity/Open-Xml-PowerTools?utm_source=github.com&utm_medium=referral&utm_content=Codeuctivity/Open-Xml-PowerTools&utm_campaign=Badge_Grade_Dashboard)
+
 Welcome, Open-Xml-PowerTools users.  As you may have learned from the repo at OfficeDev/Open-Xml-PowerTools,
 Microsoft is going to archive that repo, and will not be maintaining that repo in the future.  The good folks at
 Microsoft asked if I would maintain this repo going forward, and I said "yes, absolutely".
