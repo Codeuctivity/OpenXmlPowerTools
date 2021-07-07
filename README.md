@@ -1,5 +1,6 @@
 ﻿# OpenXmlPowerTools
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/7fe6efef1a3643d08fea930b690e486b)](https://app.codacy.com/gh/Codeuctivity/OpenXmlPowerTools?utm_source=github.com&utm_medium=referral&utm_content=Codeuctivity/OpenXmlPowerTools&utm_campaign=Badge_Grade_Settings)
 [![Build status](https://ci.appveyor.com/api/projects/status/yvbafg309sfb9syr/branch/main?svg=true)](https://ci.appveyor.com/project/stesee/openxmlpowertools/branch/main)
 [![Nuget](https://img.shields.io/nuget/v/OpenXmlPowerToolsStandard.svg)](https://www.nuget.org/packages/OpenXmlPowerToolsStandard/) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/91883269775a4333aa78d8a911dfbaf5)](https://www.codacy.com/gh/Codeuctivity/OpenXmlPowerTools/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Codeuctivity/OpenXmlPowerTools&amp;utm_campaign=Badge_Grade)
 
