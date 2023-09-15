@@ -47,7 +47,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="SixLabors.Fonts" Version="1.0.0" />
+		<PackageReference Include="SixLabors.Fonts" Version="2.0.0" />
 		<PackageReference Include="SixLabors.ImageSharp" Version="2.1.6" />
 		<PackageReference Include="SonarAnalyzer.CSharp" Version="9.7.0.75501">
 			<PrivateAssets>all</PrivateAssets>
