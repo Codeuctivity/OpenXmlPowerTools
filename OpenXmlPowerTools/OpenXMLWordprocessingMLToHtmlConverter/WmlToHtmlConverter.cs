@@ -3249,12 +3249,12 @@ namespace Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter
 
             var pp3 = wordDoc.MainDocumentPart?.Parts.FirstOrDefault(pp => pp.RelationshipId == imageRid);
 
-            if (pp3 == null)
+            if (pp3 == default)
             {
                 return null;
             }
 
-            var imagePart = (ImagePart)pp3.OpenXmlPart;
+            var imagePart = pp3?.OpenXmlPart as ImagePart;
 
             if (imagePart == null)
             {
@@ -3330,12 +3330,12 @@ namespace Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter
             try
             {
                 var pp = wordDoc.MainDocumentPart?.Parts.FirstOrDefault(pp2 => pp2.RelationshipId == imageRid);
-                if (pp == null)
+                if (!pp.HasValue)
                 {
                     return null;
                 }
 
-                var imagePart = (ImagePart)pp.OpenXmlPart;
+                var imagePart = (ImagePart)pp.Value.OpenXmlPart;
                 if (imagePart == null)
                 {
                     return null;
