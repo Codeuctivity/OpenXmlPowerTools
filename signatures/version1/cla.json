@@ -1,3 +1,12 @@
 {
-   "signedContributors": []
+  "signedContributors": [
+    {
+      "name": "huan086",
+      "id": 1448788,
+      "comment_id": 2652776795,
+      "created_at": "2025-02-12T06:25:51Z",
+      "repoId": 250996023,
+      "pullRequestNo": 117
+    }
+  ]
 }
