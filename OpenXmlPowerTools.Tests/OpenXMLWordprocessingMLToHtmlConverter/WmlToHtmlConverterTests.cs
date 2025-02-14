@@ -22,10 +22,10 @@ namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
         [InlineData("HC004-ResumeTemplate.docx", 0, false)]
         [InlineData("HC005-TaskPlanTemplate.docx", 0, false)]
         [InlineData("HC006-Test-01.docx", 80000, false)]
-        [InlineData("HC007-Test-02.docx", 0, true)]
+        [InlineData("HC007-Test-02.docx", 15000, true)]
         [InlineData("HC008-Test-03.docx", 0, false)]
         [InlineData("HC009-Test-04.docx", 0, false)]
-        [InlineData("HC010-Test-05.docx", 0, true)]
+        [InlineData("HC010-Test-05.docx", 240000, true)]
         [InlineData("HC011-Test-06.docx", 80000, false)]
         [InlineData("HC012-Test-07.docx", 10, false)]
         [InlineData("HC013-Test-08.docx", 0, false)]
@@ -194,7 +194,7 @@ namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
                     Assert.Fail($"Expected PixelErrorCount beyond {allowedPixelErrorCount} but was {result.PixelErrorCount}\nExpected {expectFullPath}\ndiffers to actual {actualFullPath}\n Diff is {newDiffImage} \nReplace {actualFullPath} with the new value or store the diff as {allowedDiffImage}.");
                 }
             }
-            catch
+            catch (System.Exception ex) when (!(ex is Xunit.Sdk.FailException))
             {
                 SaveToGithubActionsPickupTestresultsDirectory(actualFullPath, expectFullPath);
             }

@@ -1031,7 +1031,7 @@ namespace Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter
                 spanStyle.AddIfMissing("text-indent", "0");
                 spanStyle.AddIfMissing("margin-right", string.Format(NumberFormatInfo.InvariantInfo, "{0:0.000}in", totalWidth));
             }
-            else
+            else if (totalWidth > 0m)
             {
                 // Leading tabs in paragraphs
                 var div = new XElement(Xhtml.span);
