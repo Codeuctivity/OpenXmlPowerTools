@@ -92,6 +92,28 @@ namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
             await ConvertToHtml(sourceDocx, oxPtConvertedDestHtml, settings, expectedPixelNoise, false);
         }
 
+        [Theory]
+        [InlineData("HC023-Hyperlink.docx", "href=\"http://example.com/#anchor\"")]
+        public async Task HC003_ContainsSubstring(string name, params string[] expectedSubstrings)
+        {
+            var sourceDir = new DirectoryInfo("../../../../TestFiles/");
+            var sourceDocx = new FileInfo(Path.Combine(sourceDir.FullName, name));
+            var settings = new WmlToHtmlConverterSettings(sourceDocx.FullName, new ImageHandler(), new TextDummyHandler(), new SymbolHandler(), new BreakHandler(), new FontHandler(), false);
+
+            var byteArray = await File.ReadAllBytesAsync(sourceDocx.FullName);
+            using var memoryStream = new MemoryStream();
+            memoryStream.Write(byteArray, 0, byteArray.Length);
+            using var wDoc = WordprocessingDocument.Open(memoryStream, true);
+
+            var html = WmlToHtmlConverter.ConvertToHtml(wDoc, settings);
+            var htmlString = html.ToString(SaveOptions.DisableFormatting);
+
+            foreach (string expectedSubstring in expectedSubstrings)
+            {
+                Assert.Contains(expectedSubstring, htmlString);
+            }
+        }
+
         private static async Task ConvertToHtml(FileInfo sourceDocx, FileInfo destFileName, WmlToHtmlConverterSettings settings, int expectedPixeNoise, bool imageSizeMayDiffer)
         {
             var byteArray = File.ReadAllBytes(sourceDocx.FullName);
