@@ -322,8 +322,19 @@ namespace Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter
             {
                 try
                 {
-                    var a = new XElement(Xhtml.a, new XAttribute("href", wordDoc.MainDocumentPart?.HyperlinkRelationships.First(x => x.Id == (string)element.Attribute(R.id)).Uri), element.Elements(W.r).Select(run => ConvertRun(wordDoc, settings, run)));
+                    var href = wordDoc.MainDocumentPart
+                        ?.HyperlinkRelationships
+                        .First(x => x.Id == (string?)element.Attribute(R.id))
+                        .Uri
+                        .OriginalString
+                        ?? string.Empty;
+                    var anchor = element.Attribute(W.anchor);
+                    if (anchor != null)
+                    {
+                        href += "#" + anchor.Value;
+                    }
 
+                    var a = new XElement(Xhtml.a, new XAttribute("href", href), element.Elements(W.r).Select(run => ConvertRun(wordDoc, settings, run)));
                     if (!a.Nodes().Any())
                     {
                         a.Add(new XText(""));
