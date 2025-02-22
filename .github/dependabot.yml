@@ -42,7 +42,6 @@ updates:
       - dependency-name: "xunit.runner.visualstudio"
       - dependency-name: "MSTest.TestAdapter"
       - dependency-name: "MSTest.TestFramework"
-      - dependency-name: "Microsoft.SourceLink.GitHub"
       - dependency-name: "Codeuctivity.ImageSharpCompare"
       - dependency-name: "NUnit3TestAdapter"
       - dependency-name: "xunit.runner.console"

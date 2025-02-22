@@ -94,6 +94,14 @@ namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
 
         [Theory]
         [InlineData("HC023-Hyperlink.docx", "href=\"http://example.com/#anchor\"")]
+        [InlineData("HC003-Hebrew-02.docx", "<ul ", "<ol ")]
+        [InlineData("HC009-Test-04.docx", "<ul ", "<ol ")]
+        [InlineData("HC010-Test-05.docx", "<ul ")]
+        [InlineData("HC031-Complicated-Document.docx", "<ul ", "<ol ")]
+        [InlineData("HC006-Test-01.docx", "<ol ")]
+        [InlineData("HC012-Test-07.docx", "<ol ")]
+        [InlineData("HC048-Excerpt.docx", "<ol ")]
+        [InlineData("HC061-Hyperlink-in-Field.docx", "<ol ")]
         public async Task HC003_ContainsSubstring(string name, params string[] expectedSubstrings)
         {
             var sourceDir = new DirectoryInfo("../../../../TestFiles/");

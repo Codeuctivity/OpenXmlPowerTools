@@ -279,6 +279,143 @@ namespace Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter
             }
         }
 
+        private static object? ListAwareConvertToHtmlTransform(WordprocessingDocument wordDoc,
+            WmlToHtmlConverterSettings settings,
+            IEnumerable<XNode> nodes,
+            decimal currentMarginLeft,
+            IList<string?> htmlNestedListTypes)
+        {
+            List<XElement> styleOrNumParagraphs = nodes.OfType<XElement>().ToList();
+            var htmlNestedListItems = new List<(int Start, int CurrentNumber, bool Bidi, List<object> ListItems)>();
+            int previousLevels = 0;
+            int currentLevels = 0;
+            int currentNumber = 0;
+            int currentStart = 0;
+
+            for (int paragraphIndex = 0; paragraphIndex < styleOrNumParagraphs.Count; paragraphIndex += 1)
+            {
+                XElement paragraph = styleOrNumParagraphs[paragraphIndex];
+                var listType = (string?)paragraph.Attribute(PtOpenXml.HtmlStructure);
+                var isBidi = IsBidi(paragraph);
+
+                var paragraphHtml = ConvertToHtmlTransform(wordDoc, settings, paragraph, paragraphIndex != styleOrNumParagraphs.Count - 1, currentMarginLeft);
+                if (!(paragraphHtml is XElement elementXml))
+                {
+                    continue;
+                }
+
+                // Each paragraph, contains 1 or more children with data-pt-list-item-run attribute that indicates the nested numbering.
+                var paragraphChildren = elementXml.Elements().ToList();
+                bool foundItemRun = false;
+                List<object>? appendToList = null;
+                for (int childIndex = 0; childIndex < paragraphChildren.Count; childIndex += 1)
+                {
+                    var child = paragraphChildren[childIndex];
+                    var itemRun = (string?)child.Attribute("data-pt-list-item-run");
+                    if (itemRun == null)
+                    {
+                        continue;
+                    }
+
+                    if (!foundItemRun)
+                    {
+                        foundItemRun = true;
+                        string[] levels = itemRun.Split('.');
+                        currentLevels = levels.Length;
+                        for (int levelIndex = previousLevels - 1; levelIndex >= currentLevels && levelIndex > 0; levelIndex -= 1)
+                        {
+                            // We are now at a shallower nesting, add the deeper list to the shallower list as content.
+                            // Note that this creates invalid HTML where a list is directly nested inside another list without a list item "li" tag,
+                            // but Microsoft Word HTML export has the same behavior.
+                            var (_, _, _, shallowList) = htmlNestedListItems[levelIndex - 1];
+                            var (deepStart, _, _, deepList) = htmlNestedListItems[levelIndex];
+                            var deepListType = htmlNestedListTypes[levelIndex];
+                            if (!string.IsNullOrEmpty(deepListType))
+                            {
+                                var startAttribute = deepListType == "ol" ? new XAttribute("start", deepStart) : null;
+                                var listHtml = new XElement(Xhtml.xhtml + deepListType, startAttribute, deepList);
+                                shallowList.Add(listHtml);
+                                var style = new Dictionary<string, string>
+                                {
+                                    ["list-style-type"] = "none",
+                                    ["padding"] = "0",
+                                    ["margin"] = "0",
+                                };
+                                listHtml.AddAnnotation(style);
+                                if (isBidi)
+                                {
+                                    listHtml.Add(new XAttribute("dir", "rtl"));
+                                }
+                            }
+
+                            htmlNestedListItems.RemoveAt(levelIndex);
+                        }
+
+                        for (int levelIndex = 0; levelIndex < currentLevels; levelIndex += 1)
+                        {
+                            // Create the level in htmlNestedListItems
+                            int.TryParse(levels[levelIndex], out int start);
+
+                            // Current number will be set to the one from the deepest level
+                            currentNumber = start;
+                            if (levelIndex >= htmlNestedListItems.Count)
+                            {
+                                htmlNestedListItems.Add((start, start, isBidi, new List<object>()));
+                            }
+
+                            if (levelIndex >= htmlNestedListTypes.Count)
+                            {
+                                htmlNestedListTypes.Add(listType);
+                            }
+                        }
+
+                        (currentStart, _, _, appendToList) = htmlNestedListItems[currentLevels - 1];
+                    }
+                }
+
+                if (appendToList != null)
+                {
+                    appendToList.Add(new XElement(Xhtml.li, paragraphHtml));
+                    htmlNestedListTypes[currentLevels - 1] = listType;
+                    htmlNestedListItems[currentLevels - 1] = (currentStart, currentNumber, isBidi, appendToList);
+                    previousLevels = currentLevels;
+                }
+            }
+
+            var rootList = new List<object>();
+            for (int levelIndex = htmlNestedListItems.Count - 1; levelIndex >= 0; levelIndex -= 1)
+            {
+                var list = levelIndex == 0 ? rootList : htmlNestedListItems[levelIndex - 1].ListItems;
+                var (deepStart, _, isBidi, deepList) = htmlNestedListItems[levelIndex];
+                var deepListType = htmlNestedListTypes[levelIndex];
+                if (!string.IsNullOrEmpty(deepListType))
+                {
+                    var startAttribute = deepListType == "ol" ? new XAttribute("start", deepStart) : null;
+                    var listHtml = new XElement(Xhtml.xhtml + deepListType, startAttribute, deepList);
+                    list.Add(listHtml);
+                    var style = new Dictionary<string, string>
+                    {
+                        ["list-style-type"] = "none",
+                        ["padding"] = "0",
+                        ["margin"] = "0",
+                    };
+                    listHtml.AddAnnotation(style);
+                    if (isBidi)
+                    {
+                        listHtml.Add(new XAttribute("dir", "rtl"));
+                    }
+                }
+                else
+                {
+                    list.AddRange(deepList);
+                }
+
+                htmlNestedListItems.RemoveAt(levelIndex);
+            }
+
+            return rootList.Count > 0 ? rootList[0] : null;
+        }
+
         private static object? ConvertToHtmlTransform(WordprocessingDocument wordDoc, WmlToHtmlConverterSettings settings, XNode? node, bool suppressTrailingWhiteSpace, decimal currentMarginLeft, Dictionary<string, string> styleContext = default!)
         {
             if (!(node is XElement element))
@@ -1363,11 +1500,13 @@ namespace Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter
 
             DetermineRunMarks(run, rPr, style, out var runStartMark, out var runEndMark);
 
-            if (style.Any() || langAttribute != null || runStartMark != null)
+            var listItemRun = (string?)run.Attribute(PtOpenXml.ListItemRun);
+            var listItemRunAttribute = !string.IsNullOrEmpty(listItemRun) ? new XAttribute("data-pt-list-item-run", listItemRun) : null;
+            if (style.Any() || langAttribute != null || runStartMark != null || listItemRunAttribute != null)
             {
                 style.AddIfMissing("margin", "0");
                 style.AddIfMissing("padding", "0");
-                var xe = new XElement(Xhtml.span, langAttribute, runStartMark, content, runEndMark);
+                var xe = new XElement(Xhtml.span, langAttribute, runStartMark, listItemRunAttribute, content, runEndMark);
 
                 xe.AddAnnotation(style);
                 content = xe;
@@ -2625,6 +2764,7 @@ namespace Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter
 
         private static object CreateBorderDivs(WordprocessingDocument wordDoc, WmlToHtmlConverterSettings settings, IEnumerable<XElement> elements)
         {
+            var htmlNestedListTypes = new List<string>();
             return elements.GroupAdjacent(e =>
                 {
                     var pBdr = e.Elements(W.pPr).Elements(W.pBdr).FirstOrDefault();
@@ -2645,7 +2785,7 @@ namespace Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter
                 {
                     if (string.IsNullOrEmpty(g.Key))
                     {
-                        return (object)GroupAndVerticallySpaceNumberedParagraphs(wordDoc, settings, g, 0m);
+                        return (object)GroupAndVerticallySpaceNumberedParagraphs(wordDoc, settings, g, 0m, htmlNestedListTypes);
                     }
                     if (g.Key == "table")
                     {
@@ -2674,15 +2814,19 @@ namespace Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter
                     }
 
                     var div = new XElement(Xhtml.div,
-                        GroupAndVerticallySpaceNumberedParagraphs(wordDoc, settings, g, currentMarginLeft));
+                        GroupAndVerticallySpaceNumberedParagraphs(wordDoc, settings, g, currentMarginLeft, htmlNestedListTypes));
                     div.AddAnnotation(style);
                     return div;
                 })
             .ToList();
         }
 
-        private static IEnumerable<object> GroupAndVerticallySpaceNumberedParagraphs(WordprocessingDocument wordDoc, WmlToHtmlConverterSettings settings,
-            IEnumerable<XElement> elements, decimal currentMarginLeft)
+        private static IEnumerable<object> GroupAndVerticallySpaceNumberedParagraphs(
+            WordprocessingDocument wordDoc,
+            WmlToHtmlConverterSettings settings,
+            IEnumerable<XElement> elements,
+            decimal currentMarginLeft,
+            IList<string?> htmlNestedListTypes)
         {
             var grouped = elements
                 .GroupAdjacent(e =>
@@ -2713,6 +2857,11 @@ namespace Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter
                     if (string.IsNullOrEmpty(g.Key))
                     {
                         return g.Select(e => ConvertToHtmlTransform(wordDoc, settings, e, false, currentMarginLeft));
+                    }
+
+                    if (g.Key.StartsWith("num:", StringComparison.Ordinal))
+                    {
+                        return ListAwareConvertToHtmlTransform(wordDoc, settings, g, currentMarginLeft, htmlNestedListTypes);
                     }
 
                     var last = g.Count() - 1;
