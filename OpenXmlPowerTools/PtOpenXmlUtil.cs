@@ -6083,6 +6083,7 @@ listSeparator
         public static readonly XName h8 = xhtml + "h8";
         public static readonly XName h9 = xhtml + "h9";
         public static readonly XName head = xhtml + "head";
+        public static readonly XName hr = xhtml + "hr";
         public static readonly XName html = xhtml + "html";
         public static readonly XName i = xhtml + "i";
         public static readonly XName img = xhtml + "img";
