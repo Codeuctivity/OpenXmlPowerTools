@@ -728,10 +728,11 @@ namespace Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter
                 return null;
             }
 
-            var elementName = GetParagraphElementName(element, wordDoc);
+            var (elementName, attributes) = GetParagraphElementNameAndAttributes(element, wordDoc);
             var isBidi = IsBidi(element);
-            var paragraph = (XElement)ConvertParagraph(wordDoc, settings, element, elementName,
+            var paragraph = ConvertParagraph(wordDoc, settings, element, elementName,
                 suppressTrailingWhiteSpace, currentMarginLeft, isBidi);
+            paragraph.Add(attributes);
 
             // The paragraph conversion might have created empty spans. These can and should be removed because empty spans are invalid in HTML5.
             paragraph.Elements(Xhtml.span).Where(e => e.IsEmpty).Remove();
@@ -755,7 +756,7 @@ namespace Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter
 
                 elementName = Xhtml.span;
                 isBidi = IsBidi(element);
-                var span = (XElement)ConvertParagraph(wordDoc, settings, element, elementName,
+                var span = ConvertParagraph(wordDoc, settings, element, elementName,
                     suppressTrailingWhiteSpace, currentMarginLeft, isBidi);
                 var v = span.Value;
                 if (v.Length > 0 && (char.IsWhiteSpace(v[0]) || char.IsWhiteSpace(v[v.Length - 1])) && span.Attribute(XNamespace.Xml + "space") == null)
@@ -985,30 +986,42 @@ namespace Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter
                 .Any(b => b.Attribute(W.val) == null || b.Attribute(W.val).ToBoolean() == true);
         }
 
-        private static XName GetParagraphElementName(XElement element, WordprocessingDocument wordDoc)
+        private static (XName ElementName, IEnumerable<XAttribute> Attributes) GetParagraphElementNameAndAttributes(XElement element, WordprocessingDocument wordDoc)
         {
             var elementName = Xhtml.p;
 
-            var styleId = (string)element.Elements(W.pPr).Elements(W.pStyle).Attributes(W.val).FirstOrDefault();
+            var styleId = (string?)element.Elements(W.pPr).Elements(W.pStyle).Attributes(W.val).FirstOrDefault();
             if (styleId == null)
             {
-                return elementName;
+                return (elementName, Enumerable.Empty<XAttribute>());
             }
 
             var style = GetStyle(styleId, wordDoc);
             if (style == null)
             {
-                return elementName;
+                return (elementName, Enumerable.Empty<XAttribute>());
             }
 
             var outlineLevel =
                 (int?)style.Elements(W.pPr).Elements(W.outlineLvl).Attributes(W.val).FirstOrDefault();
+            if (outlineLevel != null && outlineLevel > 5 && outlineLevel < 9)
+            {
+                elementName = Xhtml.div;
+                var attributes = new XAttribute[]
+                {
+                    new XAttribute("role", "heading"),
+                    new XAttribute("aria-level", outlineLevel + 1),
+                };
+
+                return (elementName, attributes);
+            }
+
             if (outlineLevel != null && outlineLevel <= 5)
             {
                 elementName = Xhtml.xhtml + string.Format("h{0}", outlineLevel + 1);
             }
 
-            return elementName;
+            return (elementName, Enumerable.Empty<XAttribute>());
         }
 
         private static XElement? GetStyle(string styleId, WordprocessingDocument wordDoc)
@@ -1120,7 +1133,7 @@ namespace Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter
          * - wordWrap
          */
 
-        private static object ConvertParagraph(WordprocessingDocument wordDoc, WmlToHtmlConverterSettings settings,
+        private static XElement ConvertParagraph(WordprocessingDocument wordDoc, WmlToHtmlConverterSettings settings,
             XElement paragraph, XName elementName, bool suppressTrailingWhiteSpace, decimal currentMarginLeft, bool isBidi)
         {
             var style = DefineParagraphStyle(paragraph, elementName, suppressTrailingWhiteSpace, currentMarginLeft, isBidi, settings.FontHandler);

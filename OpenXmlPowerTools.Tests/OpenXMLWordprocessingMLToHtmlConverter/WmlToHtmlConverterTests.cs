@@ -67,6 +67,7 @@ namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
         [InlineData("HC049-Borders.docx", 0, false)]
         [InlineData("HC050-Shaded-Text-01.docx", 15000, false)]
         [InlineData("HC051-Shaded-Text-02.docx", 15000, false)]
+        [InlineData("HC053-Headings.docx", 0, false)]
         [InlineData("HC060-Image-with-Hyperlink.docx", 0, false)]
         [InlineData("HC061-Hyperlink-in-Field.docx", 0, false)]
         [InlineData("Tabs.docx", 0, false)]
@@ -102,6 +103,7 @@ namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
         [InlineData("HC012-Test-07.docx", "<ol ")]
         [InlineData("HC048-Excerpt.docx", "<ol ")]
         [InlineData("HC061-Hyperlink-in-Field.docx", "<ol ")]
+        [InlineData("HC053-Headings.docx", "<h1 ", "<h2 ", "<h3 ", "<h4 ", "<h5 ", "<h6 ", "role=\"heading\"", "aria-level=\"7\"", "aria-level=\"8\"", "aria-level=\"9\"")]
         public async Task HC003_ContainsSubstring(string name, params string[] expectedSubstrings)
         {
             var sourceDir = new DirectoryInfo("../../../../TestFiles/");
