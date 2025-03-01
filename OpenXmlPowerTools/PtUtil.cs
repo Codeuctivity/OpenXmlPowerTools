@@ -4,8 +4,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
@@ -1520,21 +1523,44 @@ namespace Codeuctivity.OpenXmlPowerTools
 
     public class XEntity : XText
     {
+        private readonly string decodedValue;
+
+        private readonly string originalValue;
+
         public override void WriteTo(XmlWriter writer)
         {
-            if (Value.Substring(0, 1) == "#")
+            if (this.originalValue.Length > 0
+                && this.originalValue[0] == '#')
             {
-                var e = string.Format("&{0};", Value);
-                writer.WriteRaw(e);
+                writer.WriteRaw("&" + this.originalValue + ";");
             }
             else
             {
-                writer.WriteEntityRef(Value);
+                writer.WriteEntityRef(this.originalValue);
             }
+
+            writer.WriteString(this.Value.Substring(this.decodedValue.Length));
         }
 
-        public XEntity(string value) : base(value)
+        public override async Task WriteToAsync(XmlWriter writer, CancellationToken cancellationToken)
         {
+            if (this.originalValue.Length > 0
+                && this.originalValue[0] == '#')
+            {
+                await writer.WriteRawAsync("&" + this.originalValue + ";");
+            }
+            else
+            {
+                await writer.WriteEntityRefAsync(this.originalValue);
+            }
+
+            await writer.WriteStringAsync(this.Value.Substring(this.decodedValue.Length));
+        }
+
+        public XEntity(string value) : base(WebUtility.HtmlDecode("&" + value + ";"))
+        {
+            this.originalValue = value;
+            this.decodedValue = base.Value;
         }
     }
 
