@@ -1,5 +1,6 @@
 ﻿using Codeuctivity.OpenXmlPowerTools;
 using Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter;
+using Codeuctivity.SkiaSharpCompare;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -58,7 +59,7 @@ namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
             expectedImage.Position = 0;
             actualImage.Position = 0;
 
-            Assert.True(ImageSharpCompare.ImageSharpCompare.ImagesAreEqual(expectedImage, actualImage));
+            Assert.True(Compare.ImagesAreEqual(expectedImage, actualImage, transparencyOptions: TransparencyOptions.CompareAlphaChannel));
         }
 
         [Fact]

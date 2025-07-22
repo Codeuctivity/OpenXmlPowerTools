@@ -3146,7 +3146,7 @@ namespace Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter
                 return;
             }
 
-            var shadeType = (string)shd.Attribute(W.val);
+            var shadeType = (string)shd.Attribute(W.val) ?? "clear";
             var color = (string)shd.Attribute(W.color);
             var fill = (string)shd.Attribute(W.fill);
             if (ShadeMapper.ContainsKey(shadeType))

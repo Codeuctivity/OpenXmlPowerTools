@@ -24,7 +24,7 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
-      run: dotnet test --no-build --verbosity normal --configuration Release
+      run: dotnet test --no-build --verbosity normal --configuration Release --logger "trx;LogFileName=${{ runner.workspace }}/OpenXmlPowerTools/TestResult/test_results.trx"
     - name: Publish Unit Test Results
       uses: actions/upload-artifact@v4
       if: failure()

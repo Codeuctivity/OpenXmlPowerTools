@@ -1,7 +1,12 @@
 ﻿using Codeuctivity.HtmlRenderer;
 using Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter;
+using Codeuctivity.SkiaSharpCompare;
 using DocumentFormat.OpenXml.Packaging;
+using PuppeteerSharp;
+using SkiaSharp;
+using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,44 +21,44 @@ namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
         // dir | % { '[InlineData("' + $_.Name + '")]' } | clip
 
         [Theory]
-        [InlineData("HC001-5DayTourPlanTemplate.docx", 10000, false)]
-        [InlineData("HC002-Hebrew-01.docx", 1593, false)]
-        [InlineData("HC003-Hebrew-02.docx", 0, false)]
+        [InlineData("HC001-5DayTourPlanTemplate.docx", 0, false)]
+        [InlineData("HC002-Hebrew-01.docx", 0, true)]
+        [InlineData("HC003-Hebrew-02.docx", 0, true)]
         [InlineData("HC004-ResumeTemplate.docx", 0, false)]
         [InlineData("HC005-TaskPlanTemplate.docx", 0, false)]
-        [InlineData("HC006-Test-01.docx", 80000, false)]
-        [InlineData("HC007-Test-02.docx", 15000, true)]
+        [InlineData("HC006-Test-01.docx", 0, true)]
+        [InlineData("HC007-Test-02.docx", 0, true)]
         [InlineData("HC008-Test-03.docx", 0, false)]
-        [InlineData("HC009-Test-04.docx", 0, false)]
-        [InlineData("HC010-Test-05.docx", 240000, true)]
-        [InlineData("HC011-Test-06.docx", 80000, false)]
-        [InlineData("HC012-Test-07.docx", 10, false)]
+        [InlineData("HC009-Test-04.docx", 0, true)]
+        [InlineData("HC010-Test-05.docx", 0, true)]
+        [InlineData("HC011-Test-06.docx", 0, false)]
+        [InlineData("HC012-Test-07.docx", 0, true)]
         [InlineData("HC013-Test-08.docx", 0, false)]
-        [InlineData("HC014-RTL-Table-01.docx", 20000, false)]
+        [InlineData("HC014-RTL-Table-01.docx", 0, true)]
         [InlineData("HC015-Vertical-Spacing-atLeast.docx", 0, false)]
         [InlineData("HC016-Horizontal-Spacing-firstLine.docx", 0, false)]
-        [InlineData("HC017-Vertical-Alignment-Cell-01.docx", 25000, false)]
+        [InlineData("HC017-Vertical-Alignment-Cell-01.docx", 0, false)]
         [InlineData("HC018-Vertical-Alignment-Para-01.docx", 0, false)]
         [InlineData("HC019-Hidden-Run.docx", 0, false)]
         [InlineData("HC020-Small-Caps.docx", 0, false)]
         [InlineData("HC021-Symbols.docx", 0, false)]
-        [InlineData("HC022-Table-Of-Contents.docx", 10, false)]
+        [InlineData("HC022-Table-Of-Contents.docx", 0, false)]
         [InlineData("HC023-Hyperlink.docx", 0, false)]
         [InlineData("HC024-Tabs-01.docx", 0, false)]
         [InlineData("HC025-Tabs-02.docx", 0, false)]
         [InlineData("HC026-Tabs-03.docx", 0, false)]
         [InlineData("HC027-Tabs-04.docx", 0, false)]
         [InlineData("HC028-No-Break-Hyphen.docx", 0, false)]
-        [InlineData("HC029-Table-Merged-Cells.docx", 30000, false)]
+        [InlineData("HC029-Table-Merged-Cells.docx", 0, false)]
         [InlineData("HC030-Content-Controls.docx", 0, false)]
-        [InlineData("HC031-Complicated-Document.docx", 5000, false)]
+        [InlineData("HC031-Complicated-Document.docx", 0, true)]
         [InlineData("HC032-Named-Color.docx", 0, false)]
-        [InlineData("HC033-Run-With-Border.docx", 5000, false)]
+        [InlineData("HC033-Run-With-Border.docx", 0, false)]
         [InlineData("HC034-Run-With-Position.docx", 0, false)]
         [InlineData("HC035-Strike-Through.docx", 0, false)]
         [InlineData("HC036-Super-Script.docx", 0, false)]
         [InlineData("HC037-Sub-Script.docx", 0, false)]
-        [InlineData("HC038-Conflicting-Border-Weight.docx", 10000, false)]
+        [InlineData("HC038-Conflicting-Border-Weight.docx", 0, false)]
         [InlineData("HC039-Bold.docx", 0, false)]
         [InlineData("HC040-Hyperlink-Fieldcode-01.docx", 0, false)]
         [InlineData("HC041-Hyperlink-Fieldcode-02.docx", 0, false)]
@@ -63,10 +68,10 @@ namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
         [InlineData("HC045-Italic.docx", 0, false)]
         [InlineData("HC046-BoldAndItalic.docx", 0, false)]
         [InlineData("HC047-No-Section.docx", 0, false)]
-        [InlineData("HC048-Excerpt.docx", 0, false)]
+        [InlineData("HC048-Excerpt.docx", 0, true)]
         [InlineData("HC049-Borders.docx", 0, false)]
-        [InlineData("HC050-Shaded-Text-01.docx", 15000, false)]
-        [InlineData("HC051-Shaded-Text-02.docx", 15000, false)]
+        [InlineData("HC050-Shaded-Text-01.docx", 0, false)]
+        [InlineData("HC051-Shaded-Text-02.docx", 0, false)]
         [InlineData("HC052-SmartArt.docx", 0, false)]
         [InlineData("HC053-Headings.docx", 0, false)]
         [InlineData("HC055-GoogleDocsExport.docx", 0, false)]
@@ -84,7 +89,7 @@ namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
         }
 
         [Theory]
-        [InlineData("HC006-Test-01.docx", 80000)]
+        [InlineData("HC006-Test-01.docx", 0)]
         public async Task HC002_NoCssClasses(string name, int expectedPixelNoise)
         {
             var sourceDir = new DirectoryInfo("../../../../TestFiles/");
@@ -92,7 +97,7 @@ namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
             var settings = new WmlToHtmlConverterSettings(sourceDocx.FullName, new ImageHandler(), new TextDummyHandler(), new SymbolHandler(), new BreakHandler(), new FontHandler(), false);
 
             var oxPtConvertedDestHtml = new FileInfo(Path.Combine(TestUtil.TempDir.FullName, sourceDocx.Name.Replace(".docx", "-5-OxPt-No-CSS-Classes.html")));
-            await ConvertToHtml(sourceDocx, oxPtConvertedDestHtml, settings, expectedPixelNoise, false);
+            await ConvertToHtml(sourceDocx, oxPtConvertedDestHtml, settings, expectedPixelNoise, true);
         }
 
         [Theory]
@@ -156,7 +161,11 @@ namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
             var actualFullPath = Path.GetFullPath(actualFilePath);
 
             Assert.True(File.Exists(actualFullPath), $"actualFilePath not found {actualFullPath}");
-            await using var chromiumRenderer = await Renderer.CreateAsync();
+            var launchOptions = new LaunchOptions
+            {
+                Args = new[] { "--force-device-scale-factor=1" },
+            };
+            await using var chromiumRenderer = await Renderer.CreateAsync(new BrowserFetcher(), launchOptions);
             var pathRasterizedHtml = actualFilePath + ".png";
             await chromiumRenderer.ConvertHtmlToPng(actualFilePath, pathRasterizedHtml);
 
@@ -175,66 +184,84 @@ namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
 
             Assert.True(File.Exists(expectFullPath), $"ExpectReferenceImagePath not found \n{expectFullPath}\n copy over \n{actualFullPath}\n if this is a new test case.");
 
-            var resizeOption = imageSizeMayDiffer ? ImageSharpCompare.ResizeOption.Resize : ImageSharpCompare.ResizeOption.DontResize;
-            if (ImageSharpCompare.ImageSharpCompare.ImagesAreEqual(actualFullPath, expectFullPath, resizeOption))
+            var resizeOption = imageSizeMayDiffer ? ResizeOption.Resize : ResizeOption.DontResize;
+            if (Compare.ImagesAreEqual(actualFullPath, expectFullPath, resizeOption, transparencyOptions: TransparencyOptions.CompareAlphaChannel))
             {
                 return;
             }
 
-            var osSpecificDiffFileSuffix = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "linux" : "win";
+            var allowedDiffInfo = CalcAllowedDiffInfo(actualFullPath, expectFullPath, allowedPixelErrorCount, imageSizeMayDiffer);
 
-            var allowedDiffImage = $"{expectFullPath}.diff.{osSpecificDiffFileSuffix}.png";
-            var newDiffImage = $"{actualFullPath}.diff.png";
-
-            if (!imageSizeMayDiffer && !ImageSharpCompare.ImageSharpCompare.ImagesHaveEqualSize(actualFullPath, expectFullPath))
-            {
-                // Uncomment following line to create or update a allowed diff file
-                // File.Copy(actualFullPath, expectFullPath, true);
-
-                SaveToGithubActionsPickupTestresultsDirectory(actualFullPath, expectFullPath);
-                Assert.Fail($"Actual Dimension differs from expected \nExpected {expectFullPath}\ndiffers to actual {actualFullPath} \nReplace {expectFullPath} with the new value.");
-            }
             try
             {
-                using (var maskImage = ImageSharpCompare.ImageSharpCompare.CalcDiffMaskImage(actualFullPath, expectFullPath, ImageSharpCompare.ResizeOption.Resize))
+                using (var maskImage = Compare.CalcDiffMaskImage(actualFullPath, expectFullPath, ResizeOption.Resize, transparencyOptions: TransparencyOptions.CompareAlphaChannel))
                 {
-                    using var fs = new FileStream(newDiffImage, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                    await maskImage.SaveAsync(fs, new SixLabors.ImageSharp.Formats.Png.PngEncoder());
+                    var png = maskImage.Encode(SKEncodedImageFormat.Png, 100);
+                    await File.WriteAllBytesAsync(allowedDiffInfo.NewDiffImageFileName, png.ToArray());
                 }
 
-                // Uncomment following line to create or update a allowed diff file
-                //File.Copy(actualFullPath, allowedDiffImage, true);
+                // Uncomment following line to add an allowed diff file
+                //var expectedDirectoryPath = Path.GetDirectoryName(expectFullPath);
+                //File.Copy(allowedDiffInfo.NewDiffImageFileName, Path.Combine(expectedDirectoryPath, allowedDiffInfo.NewDiffImageFileName), true);
 
-                if (File.Exists(allowedDiffImage))
+                if (!imageSizeMayDiffer && !Compare.ImagesHaveEqualSize(actualFullPath, expectFullPath))
                 {
-                    var resultWithAllowedDiff = ImageSharpCompare.ImageSharpCompare.CalcDiff(actualFullPath, expectFullPath, allowedDiffImage, resizeOption);
+                    // Uncomment following line to create or update a allowed diff file
+                    //File.Copy(actualFullPath, expectFullPath, true);
 
-                    var pixelErrorCountAboveExpectedWithDiff = resultWithAllowedDiff.PixelErrorCount > allowedPixelErrorCount;
-                    if (pixelErrorCountAboveExpectedWithDiff)
+                    SaveToGithubActionsPickupTestresultsDirectory(actualFullPath, expectFullPath, allowedDiffInfo.NewDiffImageFileName);
+                    Assert.Fail($"Actual dimension differs from expected \nExpected {expectFullPath}\ndiffers to actual {actualFullPath} \nReplace {expectFullPath} with the new value, or configure the test to expect different dimensions.");
+                }
+
+                if (allowedDiffInfo.DiffFileExists)
+                {
+                    var resultWithAllowedDiffPixelErrorCount = int.MaxValue;
+                    foreach (var allowedDiffImage in allowedDiffInfo.ExistingDiffImageFilename)
                     {
-                        SaveToGithubActionsPickupTestresultsDirectory(actualFullPath, expectFullPath);
-                        Assert.Fail($"Expected PixelErrorCount beyond {allowedPixelErrorCount} but was {resultWithAllowedDiff.PixelErrorCount}\nExpected {expectFullPath}\ndiffers to actual {actualFullPath}\n diff is {newDiffImage}\n");
+                        var resultWithAllowedDiff = Compare.CalcDiff(actualFullPath, expectFullPath, allowedDiffImage, resizeOption, transparencyOptions: TransparencyOptions.CompareAlphaChannel);
+
+                        var pixelErrorCountAboveExpectedWithDiff = resultWithAllowedDiff.PixelErrorCount > allowedPixelErrorCount;
+
+                        if (!pixelErrorCountAboveExpectedWithDiff)
+                        {
+                            return;
+                        }
+                        resultWithAllowedDiffPixelErrorCount = Math.Min(resultWithAllowedDiffPixelErrorCount, resultWithAllowedDiff.PixelErrorCount);
                     }
-                    return;
+
+                    SaveToGithubActionsPickupTestresultsDirectory(actualFullPath, expectFullPath, allowedDiffInfo.NewDiffImageFileName);
+                    Assert.Fail($"Expected PixelErrorCount beyond {allowedPixelErrorCount} but was {resultWithAllowedDiffPixelErrorCount}\nExpected {expectFullPath}\ndiffers to actual {actualFullPath}\n diff is {allowedDiffInfo.NewDiffImageFileName}\n");
                 }
 
-                var result = ImageSharpCompare.ImageSharpCompare.CalcDiff(actualFullPath, expectFullPath, resizeOption);
+                var result = Compare.CalcDiff(actualFullPath, expectFullPath, resizeOption, transparencyOptions: TransparencyOptions.CompareAlphaChannel);
 
                 var pixelErrorCountAboveExpected = result.PixelErrorCount > allowedPixelErrorCount;
                 if (pixelErrorCountAboveExpected)
                 {
-                    SaveToGithubActionsPickupTestresultsDirectory(actualFullPath, expectFullPath);
+                    SaveToGithubActionsPickupTestresultsDirectory(actualFullPath, expectFullPath, allowedDiffInfo.NewDiffImageFileName);
 
-                    Assert.Fail($"Expected PixelErrorCount beyond {allowedPixelErrorCount} but was {result.PixelErrorCount}\nExpected {expectFullPath}\ndiffers to actual {actualFullPath}\n Diff is {newDiffImage} \nReplace {actualFullPath} with the new value or store the diff as {allowedDiffImage}.");
+                    Assert.Fail($"Expected PixelErrorCount less or equal {allowedPixelErrorCount} but was {result.PixelErrorCount}\nExpected {expectFullPath}\ndiffers to actual {actualFullPath}\n Diff is {allowedDiffInfo.NewDiffImageFileName} \nReplace {actualFullPath} with the new value or store the diff as {allowedDiffInfo.ExistingDiffImageFilename.First()}.");
                 }
             }
             catch (System.Exception ex) when (!(ex is Xunit.Sdk.FailException))
             {
-                SaveToGithubActionsPickupTestresultsDirectory(actualFullPath, expectFullPath);
+                SaveToGithubActionsPickupTestresultsDirectory(actualFullPath, expectFullPath, allowedDiffInfo.NewDiffImageFileName);
             }
         }
 
-        private static void SaveToGithubActionsPickupTestresultsDirectory(string actualFullPath, string expectFullPath)
+        private static AllowedDiffInfo CalcAllowedDiffInfo(string actualFullPath, string expectFullPath, int allowedPixelErrorCount, bool imageSizeMayDiffer)
+        {
+            var osSpecificDiffFileSuffix = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "linux" : "win";
+            var newDiffImageFileName = $"{Path.GetFileName(expectFullPath)}.diff.{osSpecificDiffFileSuffix}{DateTime.Now:yyyyMMddHHmmss}.png";
+
+            var directoryPath = Path.GetDirectoryName(expectFullPath);
+            var fileNamePattern = $"{Path.GetFileName(expectFullPath)}.diff.{osSpecificDiffFileSuffix}*.png";
+            var matchingFiles = Directory.GetFiles(directoryPath, fileNamePattern);
+
+            return new AllowedDiffInfo(matchingFiles.Length > 0, newDiffImageFileName, matchingFiles);
+        }
+
+        private static void SaveToGithubActionsPickupTestresultsDirectory(string actualFullPath, string expectFullPath, string newDiffImageFileName)
         {
             var fileName = Path.GetFileName(actualFullPath);
             var expectFullDirectory = Path.GetDirectoryName(expectFullPath);
@@ -242,12 +269,17 @@ namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
 
             var testResultDirectoryActual = Path.Combine(expectFullDirectoryFullPath, "../TestResult/Actual");
             var testResultDirectoryExpected = Path.Combine(expectFullDirectoryFullPath, "../TestResult/Expected");
+            var testResultDirectoryDiff = Path.Combine(expectFullDirectoryFullPath, "../TestResult/Diff");
             CreateDirectory(Path.Combine(expectFullDirectoryFullPath, "../TestResult"));
             CreateDirectory(testResultDirectoryActual);
             CreateDirectory(testResultDirectoryExpected);
+            CreateDirectory(testResultDirectoryDiff);
 
             File.Copy(actualFullPath, Path.Combine(testResultDirectoryActual, fileName), true);
             File.Copy(expectFullPath, Path.Combine(testResultDirectoryExpected, fileName), true);
+            var newDiffImageFullPath = Path.GetFullPath(newDiffImageFileName);
+            var destFileName = Path.Combine(testResultDirectoryDiff, Path.GetFileName(newDiffImageFullPath));
+            File.Copy(newDiffImageFullPath, destFileName, true);
 
             static void CreateDirectory(string testResultDirectory)
             {
