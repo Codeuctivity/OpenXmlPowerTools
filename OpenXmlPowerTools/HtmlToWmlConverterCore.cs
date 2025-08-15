@@ -1,4 +1,4 @@
-﻿/***************************************************************************
+/***************************************************************************
  * HTML elements handled in this module:
  *
  * a
@@ -95,8 +95,7 @@
 
 using DocumentFormat.OpenXml.Packaging;
 using SixLabors.Fonts;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -2423,24 +2422,35 @@ namespace Codeuctivity.OpenXmlPowerTools
         private static XElement? TransformImageToWml(XElement element, HtmlToWmlConverterSettings settings, WordprocessingDocument wDoc)
         {
             var srcAttribute = (string)element.Attribute(XhtmlNoNamespace.src);
-            Image? bmp = null;
-            IImageFormat format;
-
+            SKBitmap? bmp = null;
             byte[] ba;
             if (srcAttribute.StartsWith("data:"))
             {
                 var semiIndex = srcAttribute.IndexOf(';');
                 var commaIndex = srcAttribute.IndexOf(',', semiIndex);
                 var base64 = srcAttribute.Substring(commaIndex + 1);
-                ba = Convert.FromBase64String(base64);
-                using var ms = new MemoryStream(ba);
-                bmp = Image.Load(ms, out format);
+                var raw = Convert.FromBase64String(base64);
+                bmp = SKBitmap.Decode(raw);
+                if (bmp == null)
+                {
+                    return null;
+                }
+                using var image = SKImage.FromBitmap(bmp);
+                using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+                ba = data.ToArray();
             }
             else
             {
                 try
                 {
-                    bmp = Image.Load(Path.Combine(settings.BaseUriForImages, srcAttribute), out format);
+                    bmp = SKBitmap.Decode(Path.Combine(settings.BaseUriForImages, srcAttribute));
+                    if (bmp == null)
+                    {
+                        return null;
+                    }
+                    using var image = SKImage.FromBitmap(bmp);
+                    using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+                    ba = data.ToArray();
                 }
                 catch (ArgumentException)
                 {
@@ -2450,9 +2460,6 @@ namespace Codeuctivity.OpenXmlPowerTools
                 {
                     return null;
                 }
-                var ms = new MemoryStream();
-                bmp.Save(ms, format);
-                ba = ms.ToArray();
             }
 
             var mdp = wDoc.MainDocumentPart;
@@ -2461,7 +2468,7 @@ namespace Codeuctivity.OpenXmlPowerTools
             var newPart = mdp.AddImagePart(ipt, rId);
             using (var s = newPart.GetStream(FileMode.Create, FileAccess.ReadWrite))
             {
-                s.Write(ba, 0, ba.GetUpperBound(0) + 1);
+                s.Write(ba, 0, ba.Length);
             }
 
             var pid = wDoc.Annotation<PictureId>();
@@ -2495,7 +2502,7 @@ namespace Codeuctivity.OpenXmlPowerTools
             return null;
         }
 
-        private static XElement GetImageAsInline(XElement element, Image bmp, string rId, int pictureId, string pictureDescription)
+        private static XElement GetImageAsInline(XElement element, SKBitmap bmp, string rId, int pictureId, string pictureDescription)
         {
             var inline = new XElement(WP.inline, // 20.4.2.8
                 new XAttribute(XNamespace.Xmlns + "wp", WP.wp.NamespaceName),
@@ -2511,7 +2518,7 @@ namespace Codeuctivity.OpenXmlPowerTools
             return inline;
         }
 
-        private static XElement GetImageAsAnchor(XElement element, HtmlToWmlConverterSettings settings, Image bmp, string rId, string floatValue, int pictureId, string pictureDescription)
+        private static XElement GetImageAsAnchor(XElement element, HtmlToWmlConverterSettings settings, SKBitmap bmp, string rId, string floatValue, int pictureId, string pictureDescription)
         {
             Emu minDistFromEdge = (long)(0.125 * Emu.s_EmusPerInch);
             long relHeight = 251658240;  // z-order
@@ -2626,13 +2633,11 @@ namespace Codeuctivity.OpenXmlPowerTools
                 new XElement(W.noProof));
         }
 
-        private static SizeEmu GetImageSizeInEmus(XElement img, Image bmp)
+        private static SizeEmu GetImageSizeInEmus(XElement img, SKBitmap bmp)
         {
-            var hres = bmp.Metadata.HorizontalResolution;
-            var vres = bmp.Metadata.VerticalResolution;
-            var s = bmp.Size();
-            Emu cx = (long)(s.Width / hres * Emu.s_EmusPerInch);
-            Emu cy = (long)(s.Height / vres * Emu.s_EmusPerInch);
+            const float dpi = 96f;
+            Emu cx = (long)(bmp.Width / dpi * Emu.s_EmusPerInch);
+            Emu cy = (long)(bmp.Height / dpi * Emu.s_EmusPerInch);
 
             var width = img.GetProp("width");
             var height = img.GetProp("height");
@@ -2659,7 +2664,7 @@ namespace Codeuctivity.OpenXmlPowerTools
             return new SizeEmu(cx, cy);
         }
 
-        private static XElement GetImageExtent(XElement img, Image bmp)
+        private static XElement GetImageExtent(XElement img, SKBitmap bmp)
         {
             var szEmu = GetImageSizeInEmus(img, bmp);
             return new XElement(WP.extent,
@@ -2692,7 +2697,7 @@ namespace Codeuctivity.OpenXmlPowerTools
                     new XAttribute(NoNamespace.noChangeAspect, 1)));
         }
 
-        private static XElement GetGraphicForImage(XElement element, string rId, Image bmp, int pictureId, string pictureDescription)
+        private static XElement GetGraphicForImage(XElement element, string rId, SKBitmap bmp, int pictureId, string pictureDescription)
         {
             var szEmu = GetImageSizeInEmus(element, bmp);
             var graphic = new XElement(A.graphic,

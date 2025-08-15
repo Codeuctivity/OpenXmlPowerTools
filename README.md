@@ -41,6 +41,12 @@ File.WriteAllText("./target.html", htmlString, Encoding.UTF8);
   enables writing XLSX files with millions of rows.
 - Extracting data (along with formatting) from spreadsheets.
 
+## SkiaSharp migration
+
+Earlier releases used the ImageSharp library for tasks such as decoding images in the WordprocessingML to HTML converter and validating rendering output in tests. ImageSharp's powerful API came with a more restrictive licensing model that could require commercial agreements, which proved limiting for downstream projects.
+
+The project now uses SkiaSharp to handle these responsibilities. SkiaSharp, distributed under the permissive MIT license, provides cross-platform bindings to the Skia graphics engine. By leveraging SkiaSharp's `SKCodec` and `SKImage` APIs for image transformation and `SKColor` for color parsing, the codebase avoids licensing friction while retaining rich imaging capabilities.
+
 ## Development
 
 - Run `dotnet build OpenXmlPowerTools.sln`

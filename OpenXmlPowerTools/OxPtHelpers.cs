@@ -50,14 +50,14 @@ namespace Codeuctivity.OpenXmlPowerTools
 
                 if (!string.IsNullOrEmpty(foreColor))
                 {
-                    SixLabors.ImageSharp.Color colorValue;
+                    SkiaSharp.SKColor colorValue;
                     if (!ColorParser.TryFromName(backColor, out colorValue))
                     {
                         throw new OpenXmlPowerToolsException(string.Format("Add-DocxText: The specified color {0} is unsupported, Please specify the valid color. Ex, Red, Green", foreColor));
                     }
 
-                    var ColorHex = string.Format("{0:x6}", colorValue);
-                    runProperties.AppendChild(new Color() { Val = ColorHex.Substring(2) });
+                    var colorHex = $"{colorValue.Red:X2}{colorValue.Green:X2}{colorValue.Blue:X2}";
+                    runProperties.AppendChild(new Color() { Val = colorHex });
                 }
 
                 if (isUnderline)
@@ -67,14 +67,14 @@ namespace Codeuctivity.OpenXmlPowerTools
 
                 if (!string.IsNullOrEmpty(backColor))
                 {
-                    SixLabors.ImageSharp.Color colorShade;
+                    SkiaSharp.SKColor colorShade;
                     if (!ColorParser.TryFromName(backColor, out colorShade))
                     {
                         throw new OpenXmlPowerToolsException(string.Format("Add-DocxText: The specified color {0} is unsupported, Please specify the valid color. Ex, Red, Green", foreColor));
                     }
 
-                    var ColorShadeHex = string.Format("{0:x6}", colorShade);
-                    runProperties.AppendChild(new Shading() { Fill = ColorShadeHex.Substring(2), Val = ShadingPatternValues.Clear });
+                    var colorShadeHex = $"{colorShade.Red:X2}{colorShade.Green:X2}{colorShade.Blue:X2}";
+                    runProperties.AppendChild(new Shading() { Fill = colorShadeHex, Val = ShadingPatternValues.Clear });
                 }
 
                 if (!string.IsNullOrEmpty(styleName))

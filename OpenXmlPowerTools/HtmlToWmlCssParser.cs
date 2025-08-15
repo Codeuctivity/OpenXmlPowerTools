@@ -1,5 +1,4 @@
-﻿using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using SkiaSharp;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -592,7 +591,7 @@ namespace Codeuctivity.OpenXmlPowerTools
             }
         }
 
-        public Color ToColor()
+        public SKColor ToColor()
         {
             var hex = "000000";
             if (Type == CssValueType.Hex)
@@ -616,7 +615,7 @@ namespace Codeuctivity.OpenXmlPowerTools
             var r = ConvertFromHex(hex.Substring(0, 2));
             var g = ConvertFromHex(hex.Substring(2, 2));
             var b = ConvertFromHex(hex.Substring(4));
-            return Color.FromRgb(r, g, b);
+            return new SKColor(r, g, b);
         }
 
         private byte ConvertFromHex(string input)
@@ -1081,7 +1080,7 @@ namespace Codeuctivity.OpenXmlPowerTools
             return 0;
         }
 
-        public Color ToColor()
+        public SKColor ToColor()
         {
             var hex = "000000";
             if (Type == CssTermType.Hex)
@@ -1106,7 +1105,7 @@ namespace Codeuctivity.OpenXmlPowerTools
                     {
                         if (Function.Expression.Terms[i].Type != CssTermType.Number)
                         {
-                            return Color.Black;
+                            return SKColors.Black;
                         }
                         switch (i)
                         {
@@ -1123,7 +1122,7 @@ namespace Codeuctivity.OpenXmlPowerTools
                                 break;
                         }
                     }
-                    return Color.FromRgb(fr, fg, fb);
+                    return new SKColor(fr, fg, fb);
                 }
                 else if (Function.Name.ToLower().Equals("hsl") && Function.Expression.Terms.Count == 3
                   || Function.Name.Equals("hsla") && Function.Expression.Terms.Count == 4
@@ -1132,7 +1131,7 @@ namespace Codeuctivity.OpenXmlPowerTools
                     int h = 0, s = 0, v = 0;
                     for (var i = 0; i < Function.Expression.Terms.Count; i++)
                     {
-                        if (Function.Expression.Terms[i].Type != CssTermType.Number) { return Color.Black; }
+                        if (Function.Expression.Terms[i].Type != CssTermType.Number) { return SKColors.Black; }
                         switch (i)
                         {
                             case 0:
@@ -1171,7 +1170,7 @@ namespace Codeuctivity.OpenXmlPowerTools
             var r = ConvertFromHex(hex.Substring(0, 2));
             var g = ConvertFromHex(hex.Substring(2, 2));
             var b = ConvertFromHex(hex.Substring(4));
-            return Color.FromRgb(r, g, b);
+            return new SKColor(r, g, b);
         }
 
         private byte ConvertFromHex(string input)
@@ -1317,7 +1316,7 @@ namespace Codeuctivity.OpenXmlPowerTools
             Value = v;
         }
 
-        public HueSatVal(Color color)
+        public HueSatVal(SKColor color)
         {
             Hue = 0;
             Saturation = 0;
@@ -1331,13 +1330,13 @@ namespace Codeuctivity.OpenXmlPowerTools
 
         public int Value { get; set; }
 
-        public Color Color
+        public SKColor Color
         {
             get => ConvertToRGB();
             set => ConvertFromRGB(value);
         }
 
-        private void ConvertFromRGB(Color color)
+        private void ConvertFromRGB(SKColor color)
         {
             double min; double max; double delta;
             var r = CalcRedConponent(color);
@@ -1380,22 +1379,22 @@ namespace Codeuctivity.OpenXmlPowerTools
             Value = (int)(v * 255.0d);
         }
 
-        private double CalcRedConponent(Color color)
+        private double CalcRedConponent(SKColor color)
         {
-            return color.ToPixel<Rgb24>().R;
+            return color.Red;
         }
 
-        private double CalcGreenConponent(Color color)
+        private double CalcGreenConponent(SKColor color)
         {
-            return color.ToPixel<Rgb24>().G;
+            return color.Green;
         }
 
-        private double CalcBlueConponent(Color color)
+        private double CalcBlueConponent(SKColor color)
         {
-            return color.ToPixel<Rgb24>().B;
+            return color.Blue;
         }
 
-        private Color ConvertToRGB()
+        private SKColor ConvertToRGB()
         {
             double h;
             double s;
@@ -1472,7 +1471,7 @@ namespace Codeuctivity.OpenXmlPowerTools
                         break;
                 }
             }
-            return Color.FromRgb((byte)(r * 255.0d), (byte)(g * 255.0d), (byte)(b * 255.0d));
+            return new SKColor((byte)(r * 255.0d), (byte)(g * 255.0d), (byte)(b * 255.0d));
         }
 
         public static bool operator !=(HueSatVal left, HueSatVal right)
