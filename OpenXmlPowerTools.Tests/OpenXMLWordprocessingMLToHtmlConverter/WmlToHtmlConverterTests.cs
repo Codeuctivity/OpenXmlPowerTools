@@ -200,7 +200,7 @@ namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
                     await File.WriteAllBytesAsync(allowedDiffInfo.NewDiffImageFileName, png.ToArray());
                 }
 
-                // Uncomment following line to add an allowed diff file
+                // Uncomment following two lines to add an allowed diff file
                 //var expectedDirectoryPath = Path.GetDirectoryName(expectFullPath);
                 //File.Copy(allowedDiffInfo.NewDiffImageFileName, Path.Combine(expectedDirectoryPath, allowedDiffInfo.NewDiffImageFileName), true);
 

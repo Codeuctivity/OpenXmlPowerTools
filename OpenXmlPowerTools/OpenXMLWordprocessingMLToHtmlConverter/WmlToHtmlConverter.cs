@@ -1,4 +1,6 @@
-﻿using DocumentFormat.OpenXml.Packaging;
+﻿using Codeuctivity.OpenXmlPowerTools.FontMetric;
+using DocumentFormat.OpenXml.Packaging;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -2466,10 +2468,10 @@ namespace Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter
                 if (_knownFamilies == null)
                 {
                     _knownFamilies = new HashSet<string>();
-                    var families = SixLabors.Fonts.SystemFonts.Families;
+                    var families = SKFontManager.Default.FontFamilies;
                     foreach (var fam in families)
                     {
-                        _knownFamilies.Add(fam.Name);
+                        _knownFamilies.Add(fam);
                     }
                 }
                 return _knownFamilies;
@@ -2505,11 +2507,11 @@ namespace Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter
             }
 
             // in theory, all unknown fonts are found by the above test, but if not...
-            SixLabors.Fonts.FontFamily ff;
+            SKTypeface ff;
 
             try
             {
-                ff = SixLabors.Fonts.SystemFonts.Families.Single(font => font.Name == fontName);
+                ff = SKTypeface.FromFamilyName(fontName);
             }
             catch (ArgumentException)
             {
@@ -2518,15 +2520,15 @@ namespace Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter
                 return 0;
             }
 
-            var fs = SixLabors.Fonts.FontStyle.Regular;
+            var fs = FontStyle.Regular;
             if (GetBoolProp(rPr, W.b) || GetBoolProp(rPr, W.bCs))
             {
-                fs |= SixLabors.Fonts.FontStyle.Bold;
+                fs |= FontStyle.Bold;
             }
 
             if (GetBoolProp(rPr, W.i) || GetBoolProp(rPr, W.iCs))
             {
-                fs |= SixLabors.Fonts.FontStyle.Italic;
+                fs |= FontStyle.Italic;
             }
 
             // Appended blank as a quick fix to accommodate &nbsp; that will get appended to some layout-critical runs such as list item numbers. In some cases, this might not be required or even wrong, so this must be revisited.

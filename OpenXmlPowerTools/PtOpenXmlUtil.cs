@@ -1,4 +1,6 @@
-﻿using DocumentFormat.OpenXml.Packaging;
+﻿using Codeuctivity.OpenXmlPowerTools.FontMetric;
+using DocumentFormat.OpenXml.Packaging;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -697,10 +699,10 @@ namespace Codeuctivity.OpenXmlPowerTools
             if (KnownFamilies == null)
             {
                 KnownFamilies = new HashSet<string>();
-                var families = SixLabors.Fonts.SystemFonts.Families;
+                var families = SKFontManager.Default.FontFamilies;
                 foreach (var fam in families)
                 {
-                    KnownFamilies.Add(fam.Name);
+                    KnownFamilies.Add(fam);
                 }
             }
 
@@ -750,10 +752,10 @@ namespace Codeuctivity.OpenXmlPowerTools
                 return 0;
             }
             // in theory, all unknown fonts are found by the above test, but if not...
-            SixLabors.Fonts.FontFamily ff;
+            SKTypeface ff;
             try
             {
-                ff = SixLabors.Fonts.SystemFonts.Families.Single(font => font.Name == fontName);
+                ff = SKTypeface.FromFamilyName(fontName);
             }
             catch (ArgumentException)
             {
@@ -761,22 +763,22 @@ namespace Codeuctivity.OpenXmlPowerTools
 
                 return 0;
             }
-            var fs = SixLabors.Fonts.FontStyle.Regular;
+            var fs = FontStyle.Regular;
             var bold = GetBoolProp(rPr, W.b) || GetBoolProp(rPr, W.bCs);
             var italic = GetBoolProp(rPr, W.i) || GetBoolProp(rPr, W.iCs);
             if (bold && !italic)
             {
-                fs = SixLabors.Fonts.FontStyle.Bold;
+                fs = FontStyle.Bold;
             }
 
             if (italic && !bold)
             {
-                fs = SixLabors.Fonts.FontStyle.Italic;
+                fs = FontStyle.Italic;
             }
 
             if (bold && italic)
             {
-                fs = SixLabors.Fonts.FontStyle.Bold | SixLabors.Fonts.FontStyle.Italic;
+                fs = FontStyle.Bold | FontStyle.Italic;
             }
 
             var runText = r.DescendantsTrimmed(W.txbxContent)
@@ -1178,11 +1180,11 @@ namespace Codeuctivity.OpenXmlPowerTools
             { W.clrSchemeMapping, 860},
             { W.doNotIncludeSubdocsInStats, 870},
             { W.doNotAutoCompressPictures, 880},
-            { W.forceUpgrade, 890}, 
-            //{W.captions, 900}, 
+            { W.forceUpgrade, 890},
+            //{W.captions, 900},
             { W.readModeInkLockDown, 910},
-            { W.smartTagType, 920}, 
-            //{W.sl:schemaLibrary, 930}, 
+            { W.smartTagType, 920},
+            //{W.sl:schemaLibrary, 930},
             { W.doNotEmbedSmartTags, 940},
             { W.decimalSymbol, 950},
             { W.listSeparator, 960},
@@ -1190,7 +1192,7 @@ namespace Codeuctivity.OpenXmlPowerTools
 
 #if false
 // from the schema in the standard
-        
+
 writeProtection
 view
 zoom

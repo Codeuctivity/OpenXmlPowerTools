@@ -97,12 +97,14 @@ namespace Codeuctivity.Tests
             bodyElement.Add(new XElement(W.p, new XElement(W.r, new XElement(W.t, "Added through PowerTools"))));
             part.PutXDocument();
 
-            // Get the part's content through the SDK. However, we will only see what we
-            // added through the SDK, not what we added through the PowerTools functionality.
+            // Get the part's content through the SDK. 
+            // Note: In OpenXML SDK 3.3.0+, the strongly-typed classes can now see changes 
+            // made through PowerTools immediately, so we expect to see both paragraphs.
             body = part.Document.Body;
             var paragraphs = body.Elements<Paragraph>().ToList();
-            Assert.Single(paragraphs);
+            Assert.Equal(2, paragraphs.Count);
             Assert.Equal("Added through SDK", paragraphs[0].InnerText);
+            Assert.Equal("Added through PowerTools", paragraphs[1].InnerText);
 
             // Now, let's end the PowerTools Block, which reloads the root element of this
             // one part. Reloading those root elements this way is fine if you know exactly
@@ -110,7 +112,7 @@ namespace Codeuctivity.Tests
             wordDocument.EndPowerToolsBlock();
 
             // Get the part's content through the SDK. Having reloaded the root element,
-            // we should now see both paragraphs.
+            // we should still see both paragraphs.
             body = part.Document.Body;
             paragraphs = body.Elements<Paragraph>().ToList();
             Assert.Equal(2, paragraphs.Count);

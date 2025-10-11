@@ -93,8 +93,8 @@
 // then need to make sure that all of the cells below the caption have the border on the appropriate sides so that it looks as if the table
 // has a border.
 
+using Codeuctivity.OpenXmlPowerTools.FontMetric;
 using DocumentFormat.OpenXml.Packaging;
-using SixLabors.Fonts;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -1293,10 +1293,10 @@ namespace Codeuctivity.OpenXmlPowerTools
             }
 
             // in theory, all unknown fonts are found by the above test, but if not...
-            FontFamily ff;
+            SKTypeface ff;
             try
             {
-                ff = SystemFonts.Families.Single(font => font.Name == fontName);
+                ff = SKTypeface.FromFamilyName(fontName);
             }
             catch (ArgumentException)
             {
@@ -2039,9 +2039,9 @@ namespace Codeuctivity.OpenXmlPowerTools
                 if (_knownFamilies == null)
                 {
                     _knownFamilies = new HashSet<string>();
-                    foreach (var fam in SystemFonts.Families)
+                    foreach (var fam in SKFontManager.Default.FontFamilies)
                     {
-                        _knownFamilies.Add(fam.Name);
+                        _knownFamilies.Add(fam);
                     }
                 }
                 return _knownFamilies;

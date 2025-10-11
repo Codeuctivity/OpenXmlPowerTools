@@ -1,5 +1,7 @@
-﻿using DocumentFormat.OpenXml.Packaging;
+﻿using Codeuctivity.OpenXmlPowerTools.FontMetric;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Validation;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -106,15 +108,23 @@ namespace Codeuctivity.OpenXmlPowerTools
             return metrics;
         }
 
-        private static int _getTextWidth(SixLabors.Fonts.FontFamily ff, SixLabors.Fonts.FontStyle fs, decimal sz, string text)
+        private static int _getTextWidth(SKTypeface typeface, FontStyle fs, decimal sz, string text)
         {
             try
             {
-                var font = new SixLabors.Fonts.Font(ff, (float)sz / 2f, fs);
-                var textOptions = new SixLabors.Fonts.TextOptions(font);
-                var size = SixLabors.Fonts.TextMeasurer.MeasureSize(text, textOptions);
+                var skFontStyle = SKFontStyle.Normal;
+                if (fs.HasFlag(FontStyle.Bold) && fs.HasFlag(FontStyle.Italic))
+                    skFontStyle = new SKFontStyle(SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic);
+                else if (fs.HasFlag(FontStyle.Bold))
+                    skFontStyle = new SKFontStyle(SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
+                else if (fs.HasFlag(FontStyle.Italic))
+                    skFontStyle = new SKFontStyle(SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic);
 
-                return (int)size.Width;
+                using var font = new SKFont(typeface, (float)sz / 2f);
+                using var paint = new SKPaint(font);
+                var bounds = new SKRect();
+                paint.MeasureText(text, ref bounds);
+                return (int)bounds.Width;
             }
             catch
             {
@@ -122,31 +132,31 @@ namespace Codeuctivity.OpenXmlPowerTools
             }
         }
 
-        public static int GetTextWidth(SixLabors.Fonts.FontFamily ff, SixLabors.Fonts.FontStyle fs, decimal sz, string text)
+        public static int GetTextWidth(SKTypeface typeface, FontStyle fs, decimal sz, string text)
         {
             try
             {
-                return _getTextWidth(ff, fs, sz, text);
+                return _getTextWidth(typeface, fs, sz, text);
             }
             catch (ArgumentException)
             {
                 try
                 {
-                    const SixLabors.Fonts.FontStyle fs2 = SixLabors.Fonts.FontStyle.Regular;
-                    return _getTextWidth(ff, fs2, sz, text);
+                    const FontStyle fs2 = FontStyle.Regular;
+                    return _getTextWidth(typeface, fs2, sz, text);
                 }
                 catch (ArgumentException)
                 {
-                    const SixLabors.Fonts.FontStyle fs2 = SixLabors.Fonts.FontStyle.Bold;
+                    const FontStyle fs2 = FontStyle.Bold;
                     try
                     {
-                        return _getTextWidth(ff, fs2, sz, text);
+                        return _getTextWidth(typeface, fs2, sz, text);
                     }
                     catch (ArgumentException)
                     {
                         // if both regular and bold fail, then get metrics for Times New Roman the original FontStyle (in fs)
-                        var ff2 = SixLabors.Fonts.SystemFonts.Families.Single(font => font.Name == "Times New Roman");
-                        return _getTextWidth(ff2, fs, sz, text);
+                        using var timesTypeface = SKTypeface.FromFamilyName("Times New Roman");
+                        return _getTextWidth(timesTypeface ?? typeface, fs, sz, text);
                     }
                 }
             }
