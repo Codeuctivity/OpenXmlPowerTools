@@ -42,3 +42,4 @@ TestResults/
 _ReSharper.Caches/
 
 TestResult/
+ExampleOutput*

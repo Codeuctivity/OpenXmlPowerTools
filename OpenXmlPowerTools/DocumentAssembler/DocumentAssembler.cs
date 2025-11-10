@@ -1,4 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -66,7 +67,7 @@ namespace Codeuctivity.OpenXmlPowerTools
             ProcessOrphanEndRepeatEndConditional(xDocRoot, te);
 
             // do the actual content replacement
-            xDocRoot = ContentReplacementTransform(xDocRoot, data, te) as XElement;
+            xDocRoot = ContentReplacementTransform(xDocRoot, data, te, part) as XElement;
 
             xDoc.Elements().First().ReplaceWith(xDocRoot);
             part.PutXDocument();
@@ -509,6 +510,25 @@ namespace Codeuctivity.OpenXmlPowerTools
                         }
                     },
                     {
+                        PA.Image,
+                        new PASchemaSet() {
+                            XsdMarkup =
+                              @"<xs:schema attributeFormDefault='unqualified' elementFormDefault='qualified' xmlns:xs='http://www.w3.org/2001/XMLSchema'>
+                                  <xs:element name='Image'>
+                                    <xs:complexType>
+                                      <xs:attribute name='Select' type='xs:string' use='required' />
+                                      <xs:attribute name='Optional' type='xs:boolean' use='optional' />
+                                      <xs:attribute name='Align' type='xs:string' use='optional' />
+                                      <xs:attribute name='Width' type='xs:string' use='optional' />
+                                      <xs:attribute name='Height' type='xs:string' use='optional' />
+                                      <xs:attribute name='MaxWidth' type='xs:string' use='optional' />
+                                      <xs:attribute name='MaxHeight' type='xs:string' use='optional' />
+                                    </xs:complexType>
+                                  </xs:element>
+                                </xs:schema>",
+                        }
+                    },
+                    {
                         PA.Table,
                         new PASchemaSet() {
                             XsdMarkup =
@@ -601,7 +621,7 @@ namespace Codeuctivity.OpenXmlPowerTools
 
         private static Dictionary<XName, PASchemaSet> s_PASchemaSets;
 
-        private static object? ContentReplacementTransform(XNode node, XElement data, TemplateError templateError)
+        private static object? ContentReplacementTransform(XNode node, XElement data, TemplateError templateError, OpenXmlPart owningPart)
         {
             if (node is XElement element)
             {
@@ -612,7 +632,7 @@ namespace Codeuctivity.OpenXmlPowerTools
 
                     var xPath = (string)element.Attribute(PA.Select);
                     var optionalString = (string)element.Attribute(PA.Optional);
-                    var optional = (optionalString != null && optionalString.ToLower() == "true");
+                    var optional = bool.TryParse(optionalString, out var optionalValue) && optionalValue;
 
                     string newValue;
                     try
@@ -649,11 +669,73 @@ namespace Codeuctivity.OpenXmlPowerTools
                         return list;
                     }
                 }
+                if (element.Name == PA.Image)
+                {
+                    var xPath = (string)element.Attribute(PA.Select);
+                    var optionalString = (string)element.Attribute(PA.Optional);
+                    var optional = bool.TryParse(optionalString, out var optionalValue) && optionalValue;
+                    var alignString = (string)element.Attribute(PA.Align);
+                    var widthAttr = (string)element.Attribute(PA.Width);
+                    var heightAttr = (string)element.Attribute(PA.Height);
+                    var maxWidthAttr = (string)element.Attribute(PA.MaxWidth);
+                    var maxHeightAttr = (string)element.Attribute(PA.MaxHeight);
+
+                    string base64Content;
+                    try
+                    {
+                        base64Content = EvaluateXPathToString(data, xPath, optional);
+                    }
+                    catch (XPathException e)
+                    {
+                        return CreateContextErrorMessage(element, "XPathException: " + e.Message, templateError);
+                    }
+
+                    if (string.IsNullOrEmpty(base64Content))
+                    {
+                        return null;
+                    }
+
+                    byte[] imageBytes;
+                    try
+                    {
+                        imageBytes = Convert.FromBase64String(base64Content);
+                    }
+                    catch (FormatException e)
+                    {
+                        return CreateContextErrorMessage(element, "Image: " + e.Message, templateError);
+                    }
+
+                    if (!ImageHelper.TryGetJustification(alignString, out var justification, out var justificationError))
+                    {
+                        return CreateContextErrorMessage(element, justificationError, templateError);
+                    }
+
+                    if (owningPart == null)
+                    {
+                        throw new OpenXmlPowerToolsException("Image: owning part is not available.");
+                    }
+
+                    if (!ImageHelper.TryCalculateImageDimensions(imageBytes, widthAttr, heightAttr, maxWidthAttr, maxHeightAttr, out var widthEmu, out var heightEmu, out var sizeError))
+                    {
+                        return CreateContextErrorMessage(element, sizeError, templateError);
+                    }
+
+                    var imagePart = ImageHelper.AddImagePart(owningPart);
+                    using (var stream = new MemoryStream(imageBytes))
+                    {
+                        imagePart.FeedData(stream);
+                    }
+
+                    var relationshipId = owningPart.GetIdOfPart(imagePart);
+                    var docPrId = ImageHelper.GetNextDocPrId(owningPart);
+                    var imageElement = ImageHelper.CreateImageElement(relationshipId, docPrId, widthEmu, heightEmu, justification);
+                    return imageElement;
+                }
                 if (element.Name == PA.Repeat)
                 {
                     var selector = (string)element.Attribute(PA.Select);
                     var optionalString = (string)element.Attribute(PA.Optional);
-                    var optional = (optionalString != null && optionalString.ToLower() == "true");
+                    var optional = bool.TryParse(optionalString, out var optionalValue) && optionalValue;
 
                     IEnumerable<XElement> repeatingData;
                     try
@@ -676,7 +758,7 @@ namespace Codeuctivity.OpenXmlPowerTools
                         {
                             var content = element
                                 .Elements()
-                                .Select(e => ContentReplacementTransform(e, d, templateError))
+                                .Select(e => ContentReplacementTransform(e, d, templateError, owningPart))
                                 .ToList();
                             return content;
                         })
@@ -706,7 +788,7 @@ namespace Codeuctivity.OpenXmlPowerTools
                         .Skip(2)
                         .ToList();
                     var footerRows = footerRowsBeforeTransform
-                        .Select(x => ContentReplacementTransform(x, data, templateError))
+                        .Select(x => ContentReplacementTransform(x, data, templateError, owningPart))
                         .ToList();
                     if (protoRow == null)
                     {
@@ -784,14 +866,14 @@ namespace Codeuctivity.OpenXmlPowerTools
 
                     if ((match != null && testValue == match) || (notMatch != null && testValue != notMatch))
                     {
-                        var content = element.Elements().Select(e => ContentReplacementTransform(e, data, templateError));
+                        var content = element.Elements().Select(e => ContentReplacementTransform(e, data, templateError, owningPart));
                         return content;
                     }
                     return null;
                 }
                 return new XElement(element.Name,
                     element.Attributes(),
-                    element.Nodes().Select(n => ContentReplacementTransform(n, data, templateError)));
+                    element.Nodes().Select(n => ContentReplacementTransform(n, data, templateError, owningPart)));
             }
             return node;
         }
