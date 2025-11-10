@@ -91,7 +91,13 @@ namespace Codeuctivity.OpenXmlPowerTools
                 var existingIds = part
                     .GetXDocument()
                     .Descendants(WP.docPr)
-                    .Select(dp => (int?)dp.Attribute("id") ?? 0);
+                    .Select(dp =>
+                    {
+                        var idAttr = dp.Attribute("id");
+                        if (idAttr != null && int.TryParse(idAttr.Value, out int id))
+                            return id;
+                        return 0;
+                    });
                 var maxId = existingIds.Any() ? existingIds.Max() : 0;
                 tracker = new ImageIdTracker { NextId = maxId + 1 };
                 part.AddAnnotation(tracker);
