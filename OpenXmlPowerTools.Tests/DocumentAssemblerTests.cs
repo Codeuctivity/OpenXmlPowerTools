@@ -1,5 +1,6 @@
 ﻿using Codeuctivity.OpenXmlPowerTools;
 using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
 using DocumentFormat.OpenXml.Validation;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using Xunit;
+using System.Globalization;
 
 namespace Codeuctivity.Tests
 {
@@ -200,6 +202,290 @@ namespace Codeuctivity.Tests
             Assert.Equal(err, returnedTemplateError);
         }
 
+        [Fact]
+        public void AssembleDocument_ImageMetadataCreatesImageParts()
+        {
+            var template = CreateTemplateDocument("DA-ImageTemplate.docx",
+                "<# <Image Select=\"Image[1]\" /> #>",
+                "<# <Image Select=\"Image[2]\" /> #>");
+            var data = new XElement("Images",
+                new XElement("Image", TinyPngBase64),
+                new XElement("Image", TinyPngBase64));
+
+            var assembled = DocumentAssembler.AssembleDocument(template, data, out var templateError);
+            Assert.False(templateError);
+
+            using var ms = new MemoryStream(assembled.DocumentByteArray);
+            using var wDoc = WordprocessingDocument.Open(ms, false);
+            var mainPart = wDoc.MainDocumentPart;
+
+            Assert.Equal(2, mainPart.ImageParts.Count());
+
+            var docPrIds = mainPart
+                .GetXDocument()
+                .Descendants(WP.docPr)
+                .Select(d => (int)d.Attribute("id"))
+                .ToList();
+            Assert.Equal(new[] { 1, 2 }, docPrIds);
+
+            var blipIds = mainPart
+                .GetXDocument()
+                .Descendants(A.blip)
+                .Select(b => (string)b.Attribute(R.embed))
+                .ToList();
+            Assert.Equal(2, blipIds.Count);
+            Assert.All(blipIds, id => Assert.False(string.IsNullOrEmpty(id)));
+        }
+
+        [Fact]
+        public void AssembleDocument_InvalidBase64RaisesTemplateError()
+        {
+            var template = CreateTemplateDocument("DA-ImageInvalidTemplate.docx", "<# <Image Select=\"Image[1]\" /> #>");
+            var data = new XElement("Images", new XElement("Image", "not-base64"));
+
+            var assembled = DocumentAssembler.AssembleDocument(template, data, out var templateError);
+            Assert.True(templateError);
+
+            using var ms = new MemoryStream(assembled.DocumentByteArray);
+            using var wDoc = WordprocessingDocument.Open(ms, false);
+            var text = string.Concat(wDoc.MainDocumentPart.GetXDocument().Descendants(W.t).Select(t => (string)t));
+            Assert.Contains("Image:", text);
+        }
+
+        [Fact]
+        public void AssembleDocument_OptionalImageIsSkippedWhenMissing()
+        {
+            var template = CreateTemplateDocument("DA-OptionalImageTemplate.docx", "<# <Image Select=\"Missing\" Optional=\"true\" /> #>");
+            var data = new XElement("Images");
+
+            var assembled = DocumentAssembler.AssembleDocument(template, data, out var templateError);
+            Assert.False(templateError);
+
+            using var ms = new MemoryStream(assembled.DocumentByteArray);
+            using var wDoc = WordprocessingDocument.Open(ms, false);
+            var drawings = wDoc.MainDocumentPart.GetXDocument().Descendants(W.drawing);
+            Assert.Empty(drawings);
+            Assert.Empty(wDoc.MainDocumentPart.ImageParts);
+        }
+
+        [Fact]
+        public void AssembleDocument_ImageWidthScalesHeight()
+        {
+            var template = CreateTemplateDocument("DA-ImageWidth.docx", "<# <Image Select=\"Image[1]\" Width=\"1in\" /> #>");
+            var data = new XElement("Images", new XElement("Image", LargeSamplePngBase64));
+
+            var assembled = DocumentAssembler.AssembleDocument(template, data, out var templateError);
+            Assert.False(templateError);
+
+            var (paragraph, extent) = ExtractImageParagraph(assembled);
+            Assert.Null(paragraph.Element(W.pPr));
+            Assert.Equal(EmusPerInch.ToString("0", CultureInfo.InvariantCulture), (string)extent.Attribute("cx"));
+            Assert.Equal((EmusPerInch / 2).ToString("0", CultureInfo.InvariantCulture), (string)extent.Attribute("cy"));
+        }
+
+        [Fact]
+        public void AssembleDocument_ImageHeightScalesWidth()
+        {
+            var template = CreateTemplateDocument("DA-ImageHeight.docx", "<# <Image Select=\"Image[1]\" Height=\"1in\" /> #>");
+            var data = new XElement("Images", new XElement("Image", LargeSamplePngBase64));
+
+            var assembled = DocumentAssembler.AssembleDocument(template, data, out var templateError);
+            Assert.False(templateError);
+
+            var (paragraph, extent) = ExtractImageParagraph(assembled);
+            Assert.Null(paragraph.Element(W.pPr));
+            Assert.Equal((EmusPerInch * 2).ToString("0", CultureInfo.InvariantCulture), (string)extent.Attribute("cx"));
+            Assert.Equal(EmusPerInch.ToString("0", CultureInfo.InvariantCulture), (string)extent.Attribute("cy"));
+        }
+
+        [Fact]
+        public void AssembleDocument_ImageMaxWidthCentersParagraph()
+        {
+            var template = CreateTemplateDocument("DA-ImageMaxWidth.docx", "<# <Image Select=\"Image[1]\" Align=\"center\" MaxWidth=\"3in\" /> #>");
+            var data = new XElement("Images", new XElement("Image", LargeSamplePngBase64));
+
+            var assembled = DocumentAssembler.AssembleDocument(template, data, out var templateError);
+            Assert.False(templateError);
+
+            var (paragraph, extent) = ExtractImageParagraph(assembled);
+            Assert.Equal("center", (string)paragraph.Element(W.pPr)?.Element(W.jc)?.Attribute(W.val));
+            var expectedWidth = 3 * EmusPerInch;
+            var expectedHeight = expectedWidth / 2;
+            Assert.Equal(expectedWidth.ToString("0", CultureInfo.InvariantCulture), (string)extent.Attribute("cx"));
+            Assert.Equal(expectedHeight.ToString("0", CultureInfo.InvariantCulture), (string)extent.Attribute("cy"));
+        }
+
+        [Fact]
+        public void AssembleDocument_ImageMaxHeightJustifiesParagraph()
+        {
+            var template = CreateTemplateDocument("DA-ImageMaxHeight.docx", "<# <Image Select=\"Image[1]\" Align=\"justify\" MaxHeight=\"150px\" /> #>");
+            var data = new XElement("Images", new XElement("Image", TallPngBase64));
+
+            var assembled = DocumentAssembler.AssembleDocument(template, data, out var templateError);
+            Assert.False(templateError);
+
+            var (paragraph, extent) = ExtractImageParagraph(assembled);
+            Assert.Equal("both", (string)paragraph.Element(W.pPr)?.Element(W.jc)?.Attribute(W.val));
+            var maxHeight = 150 * EmusPerPixel;
+            var expectedWidth = (200 * EmusPerPixel) * (maxHeight / (400 * EmusPerPixel));
+            Assert.Equal(expectedWidth.ToString("0", CultureInfo.InvariantCulture), (string)extent.Attribute("cx"));
+            Assert.Equal(maxHeight.ToString("0", CultureInfo.InvariantCulture), (string)extent.Attribute("cy"));
+        }
+
+        [Fact]
+        public void AssembleDocument_ImageMaxHeightAndWidthAppliesLargestConstraint()
+        {
+            var template = CreateTemplateDocument("DA-ImageMaxBoth.docx", "<# <Image Select=\"Image[1]\" Align=\"right\" Width=\"4in\" MaxHeight=\"1in\" /> #>");
+            var data = new XElement("Images", new XElement("Image", LargeSamplePngBase64));
+
+            var assembled = DocumentAssembler.AssembleDocument(template, data, out var templateError);
+            Assert.False(templateError);
+
+            var (paragraph, extent) = ExtractImageParagraph(assembled);
+            Assert.Equal("right", (string)paragraph.Element(W.pPr)?.Element(W.jc)?.Attribute(W.val));
+            Assert.Equal((2 * EmusPerInch).ToString("0", CultureInfo.InvariantCulture), (string)extent.Attribute("cx"));
+            Assert.Equal(EmusPerInch.ToString("0", CultureInfo.InvariantCulture), (string)extent.Attribute("cy"));
+        }
+
+        [Fact]
+        public void AssembleDocument_ImageInvalidAlignProducesTemplateError()
+        {
+            var template = CreateTemplateDocument("DA-ImageInvalidAlign.docx", "<# <Image Select=\"Image[1]\" Align=\"diagonal\" /> #>");
+            var data = new XElement("Images", new XElement("Image", LargeSamplePngBase64));
+
+            var assembled = DocumentAssembler.AssembleDocument(template, data, out var templateError);
+            Assert.True(templateError);
+
+            var text = GetDocumentText(assembled);
+            Assert.Contains("Align attribute must be one of Left, Center, Right, or Justify.", text);
+        }
+
+        [Fact]
+        public void AssembleDocument_ImageInvalidWidthReportsError()
+        {
+            var template = CreateTemplateDocument("DA-ImageInvalidWidth.docx", "<# <Image Select=\"Image[1]\" Width=\"abc\" /> #>");
+            var data = new XElement("Images", new XElement("Image", LargeSamplePngBase64));
+
+            var assembled = DocumentAssembler.AssembleDocument(template, data, out var templateError);
+            Assert.True(templateError);
+            var text = GetDocumentText(assembled);
+            Assert.Contains("Unable to parse length 'abc'.", text);
+        }
+
+        [Fact]
+        public void AssembleDocument_ImageZeroHeightReportsError()
+        {
+            var template = CreateTemplateDocument("DA-ImageZeroHeight.docx", "<# <Image Select=\"Image[1]\" Height=\"0in\" /> #>");
+            var data = new XElement("Images", new XElement("Image", LargeSamplePngBase64));
+
+            var assembled = DocumentAssembler.AssembleDocument(template, data, out var templateError);
+            Assert.True(templateError);
+            var text = GetDocumentText(assembled);
+            Assert.Contains("Length value '0in' must be greater than zero.", text);
+        }
+
+        [Fact]
+        public void AssembleDocument_ImageGifDimensionsFallback()
+        {
+            var template = CreateTemplateDocument("DA-ImageGifFallback.docx", "<# <Image Select=\"Image[1]\" /> #>");
+            var data = new XElement("Images", new XElement("Image", TruncatedGifBase64));
+
+            var assembled = DocumentAssembler.AssembleDocument(template, data, out var templateError);
+            Assert.False(templateError);
+
+            var (paragraph, extent) = ExtractImageParagraph(assembled);
+            Assert.Null(paragraph.Element(W.pPr));
+            Assert.Equal((200 * EmusPerPixel).ToString("0", CultureInfo.InvariantCulture), (string)extent.Attribute("cx"));
+            Assert.Equal((80 * EmusPerPixel).ToString("0", CultureInfo.InvariantCulture), (string)extent.Attribute("cy"));
+        }
+
+        [Fact]
+        public void AssembleDocument_ImageRespectsMaxDimensionsAndAlign()
+        {
+            var template = CreateTemplateDocument("DA-ImageConstraintTemplate.docx", "<# <Image Select=\"Image[1]\" Align=\"center\" MaxWidth=\"300px\" /> #>");
+            var data = new XElement("ImageData", new XElement("Image", LargeSamplePngBase64));
+
+            var assembled = DocumentAssembler.AssembleDocument(template, data, out var templateError);
+            Assert.False(templateError);
+
+            using var ms = new MemoryStream(assembled.DocumentByteArray);
+            using var wDoc = WordprocessingDocument.Open(ms, false);
+            var paragraph = wDoc.MainDocumentPart.GetXDocument().Descendants(W.p).FirstOrDefault(p => p.Descendants(W.drawing).Any());
+            Assert.NotNull(paragraph);
+            var jc = paragraph!.Element(W.pPr)?.Element(W.jc)?.Attribute(W.val)?.Value;
+            Assert.Equal("center", jc);
+
+            var extent = paragraph.Descendants(WP.extent).First();
+            Assert.Equal(2857500d.ToString("0", CultureInfo.InvariantCulture), (string)extent.Attribute("cx"));
+            Assert.Equal(1428750d.ToString("0", CultureInfo.InvariantCulture), (string)extent.Attribute("cy"));
+        }
+
+        [Fact]
+        public void AssembleDocument_ImageUsesExplicitDimensions()
+        {
+            var template = CreateTemplateDocument("DA-ImageExplicitSizeTemplate.docx", "<# <Image Select=\"Image[1]\" Align=\"right\" Width=\"2in\" Height=\"1in\" /> #>");
+            var data = new XElement("ImageData", new XElement("Image", LargeSamplePngBase64));
+
+            var assembled = DocumentAssembler.AssembleDocument(template, data, out var templateError);
+            Assert.False(templateError);
+
+            using var ms = new MemoryStream(assembled.DocumentByteArray);
+            using var wDoc = WordprocessingDocument.Open(ms, false);
+            var paragraph = wDoc.MainDocumentPart.GetXDocument().Descendants(W.p).FirstOrDefault(p => p.Descendants(W.drawing).Any());
+            Assert.NotNull(paragraph);
+            var jc = paragraph!.Element(W.pPr)?.Element(W.jc)?.Attribute(W.val)?.Value;
+            Assert.Equal("right", jc);
+
+            var extent = paragraph.Descendants(WP.extent).First();
+            Assert.Equal(1828800d.ToString("0", CultureInfo.InvariantCulture), (string)extent.Attribute("cx"));
+            Assert.Equal(914400d.ToString("0", CultureInfo.InvariantCulture), (string)extent.Attribute("cy"));
+        }
+
+        private static WmlDocument CreateTemplateDocument(string fileName, params string[] paragraphTexts)
+        {
+            using var ms = new MemoryStream();
+            using (var wDoc = WordprocessingDocument.Create(ms, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
+            {
+                var mainPart = wDoc.AddMainDocumentPart();
+                var body = new Body(paragraphTexts.Select(text =>
+                    new Paragraph(
+                        new Run(
+                            new Text(text) { Space = DocumentFormat.OpenXml.SpaceProcessingModeValues.Preserve }))));
+                mainPart.Document = new Document(body);
+                mainPart.Document.Save();
+            }
+
+            return new WmlDocument(fileName, ms.ToArray());
+        }
+
+        private static (XElement Paragraph, XElement Extent) ExtractImageParagraph(WmlDocument document)
+        {
+            using var ms = new MemoryStream();
+            ms.Write(document.DocumentByteArray, 0, document.DocumentByteArray.Length);
+            using var wDoc = WordprocessingDocument.Open(ms, false);
+            var main = wDoc.MainDocumentPart.GetXDocument();
+            var paragraph = main.Descendants(W.p).First(p => p.Descendants(W.drawing).Any());
+            var extent = paragraph.Descendants(WP.extent).First();
+            return (paragraph, extent);
+        }
+
+        private static string GetDocumentText(WmlDocument document)
+        {
+            using var ms = new MemoryStream();
+            ms.Write(document.DocumentByteArray, 0, document.DocumentByteArray.Length);
+            using var wDoc = WordprocessingDocument.Open(ms, false);
+            var main = wDoc.MainDocumentPart.GetXDocument();
+            return string.Concat(main.Descendants(W.t).Select(t => (string)t));
+        }
+
+        private const double EmusPerInch = 914400d;
+        private const double EmusPerPixel = EmusPerInch / 96d;
+        private const string TinyPngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==";
+        private const string LargeSamplePngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAZAAAADICAIAAABJdyC1AAACvElEQVR4nO3WsQ3DQBAEsXvB/bf8akHZYQyygo0Ge2buABQ82wMAvhIsIEOwgAzBAjIEC8gQLCBDsIAMwQIyBAvIECwgQ7CADMECMgQLyBAsIEOwgAzBAjIEC8gQLCBDsIAMwQIyBAvIECwgQ7CADMECMgQLyBAsIEOwgAzBAjIEC8gQLCBDsIAMwQIyBAvIECwgQ7CADMECMgQLyPhtDyi5c7Yn8J/O3O0JDR4WkCFYQIZgARmCBWQIFpAhWECGYAEZggVkCBaQIVhAhmABGYIFZAgWkCFYQIZgARmCBWQIFpAhWECGYAEZggVkCBaQIVhAhmABGYIFZAgWkCFYQIZgARmCBWQIFpAhWECGYAEZggVkCBaQIVhAhmABGYIFZAgWkCFYQIZgARmCBWQIFpAhWECGYAEZggVkCBaQIVhAhmABGYIFZAgWkCFYQIZgARmCBWQIFpAhWECGYAEZggVkCBaQIVhAhmABGYIFZAgWkCFYQIZgARmCBWQIFpAhWECGYAEZggVkCBaQIVhAhmABGYIFZAgWkCFYQIZgARmCBWScmbu9AeATDwvIECwgQ7CADMECMgQLyBAsIEOwgAzBAjIEC8gQLCBDsIAMwQIyBAvIECwgQ7CADMECMgQLyBAsIEOwgAzBAjIEC8gQLCBDsIAMwQIyBAvIECwgQ7CADMECMgQLyBAsIEOwgAzBAjIEC8gQLCBDsIAMwQIyBAvIECwgQ7CADMECMgQLyBAsIEOwgAzBAjIEC8gQLCBDsIAMwQKm4gVVxAWP2c47WwAAAABJRU5ErkJggg==";
+
+        private const string WidePngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAZAAAADICAIAAABJdyC1AAACuUlEQVR4nO3UMQ7CQBAEwT3EvxEvXz/BZKalqniCifrs7gAUvGfmnO/TNwBu7H5edxuAfyFYQIZgARmCBWQIFpAhWECGYAEZggVkCBaQIVhAhmABGYIFZAgWkCFYQIZgARmCBWQIFpAhWECGYAEZggVkCBaQIVhAhmABGYIFZAgWkCFYQIZgARmCBWQIFpAhWECGYAEZggVkCBaQIVhAhmABGYIFZAgWkCFYQIZgARmCBWQIFpAhWECGYAEZggVkCBaQIVhAhmABGYIFZAgWkCFYQIZgARmCBWQIFpAhWECGYAEZggVkCBaQIVhAhmABGYIFFzMzu2y8A5u4PQZkIj89BEMEAAAAASUVORK5CYII=";
+        private const string TallPngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAMgAAAGQCAIAAABkkLjnAAAEF0lEQVR4nO3S0QkCURAEwX1i3mLke0lcI3hVAQzz0Wd3B+72npnzPbfv8mT72devP/CfhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkzu42y8yTXVnDDBu1Y983AAAAAElFTkSuQmCC";
+        private const string TruncatedGifBase64 = "R0lGODlhyABQAA==";
         private static readonly List<string> s_ExpectedErrors = new List<string>()
         {
             "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:evenHBand' attribute is not declared.",

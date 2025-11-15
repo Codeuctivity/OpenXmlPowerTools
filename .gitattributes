@@ -18,7 +18,8 @@
 
 # Declare files that will always have CRLF line endings on checkout.
 *.sln text eol=crlf
-*.csproj text eol=crlf
+# Ignore line ending changes in csproj files to prevent VS Code auto-formatting issues
+*.csproj text=auto
 
 # Denote all files that are truly binary and should not be modified.
 *.png binary

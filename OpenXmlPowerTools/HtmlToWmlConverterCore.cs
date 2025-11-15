@@ -3021,8 +3021,18 @@ namespace Codeuctivity.OpenXmlPowerTools
             XElement? szCs = null;
             if (fontSizeTPoint != null)
             {
-                sz = new XElement(W.sz, new XAttribute(W.val, (int)((double)fontSizeTPoint * 2)));
-                szCs = new XElement(W.szCs, new XAttribute(W.val, (int)((double)fontSizeTPoint * 2)));
+                var sizeInPoints = (double)fontSizeTPoint;
+                if (!double.IsNaN(sizeInPoints) && !double.IsInfinity(sizeInPoints))
+                {
+                    var halfPoints = sizeInPoints * 2.0;
+                    if (halfPoints >= 1 && halfPoints <= 1638)
+                    {
+                        var roundedHalfPoints = (int)Math.Round(halfPoints, MidpointRounding.AwayFromZero);
+                        roundedHalfPoints = Math.Max(1, Math.Min(roundedHalfPoints, 1638));
+                        sz = new XElement(W.sz, new XAttribute(W.val, roundedHalfPoints));
+                        szCs = new XElement(W.szCs, new XAttribute(W.val, roundedHalfPoints));
+                    }
+                }
             }
 
             XElement? strike = null;
