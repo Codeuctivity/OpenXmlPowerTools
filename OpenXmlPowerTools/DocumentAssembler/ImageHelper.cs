@@ -1,6 +1,7 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using SkiaSharp;
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
@@ -362,129 +363,14 @@ namespace Codeuctivity.OpenXmlPowerTools
                     return true;
                 }
             }
-            catch
+            catch (Exception excepiton)
             {
-                // ignore and fall back to header-based detection
-            }
-
-            if (TryReadPngDimensions(imageBytes, out width, out height))
-            {
-                return true;
-            }
-
-            if (TryReadJpegDimensions(imageBytes, out width, out height))
-            {
-                return true;
-            }
-
-            if (TryReadGifDimensions(imageBytes, out width, out height))
-            {
-                return true;
+                errorMessage = excepiton.Message;
+                return false;
             }
 
             errorMessage = "Image: Unable to determine image dimensions.";
             return false;
-        }
-
-        /// <summary>
-        /// Reads PNG image dimensions from the file header.
-        /// </summary>
-        private static bool TryReadPngDimensions(byte[] bytes, out int width, out int height)
-        {
-            width = 0;
-            height = 0;
-            if (bytes.Length < 24)
-            {
-                return false;
-            }
-
-            var signature = new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 };
-            for (var i = 0; i < signature.Length; i++)
-            {
-                if (bytes[i] != signature[i])
-                {
-                    return false;
-                }
-            }
-
-            if (bytes[12] != 0x49 || bytes[13] != 0x48 || bytes[14] != 0x44 || bytes[15] != 0x52)
-            {
-                return false;
-            }
-
-            width = (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19];
-            height = (bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23];
-            return width > 0 && height > 0;
-        }
-
-        /// <summary>
-        /// Reads JPEG image dimensions from the file header.
-        /// </summary>
-        private static bool TryReadJpegDimensions(byte[] bytes, out int width, out int height)
-        {
-            width = 0;
-            height = 0;
-            if (bytes.Length < 4 || bytes[0] != 0xFF || bytes[1] != 0xD8)
-            {
-                return false;
-            }
-
-            var index = 2;
-            while (index + 9 < bytes.Length)
-            {
-                if (bytes[index] != 0xFF)
-                {
-                    index++;
-                    continue;
-                }
-
-                var marker = bytes[index + 1];
-                index += 2;
-
-                if (marker == 0xD8 || marker == 0xD9)
-                {
-                    continue;
-                }
-
-                if (index + 2 > bytes.Length)
-                {
-                    break;
-                }
-
-                var length = (bytes[index] << 8) + bytes[index + 1];
-                if (length < 2 || index + length > bytes.Length)
-                {
-                    break;
-                }
-
-                if (marker >= 0xC0 && marker <= 0xC3)
-                {
-                    height = (bytes[index + 3] << 8) + bytes[index + 4];
-                    width = (bytes[index + 5] << 8) + bytes[index + 6];
-                    return width > 0 && height > 0;
-                }
-
-                index += length;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Reads GIF image dimensions from the file header.
-        /// </summary>
-        private static bool TryReadGifDimensions(byte[] bytes, out int width, out int height)
-        {
-            width = 0;
-            height = 0;
-            if (bytes.Length < 10 || bytes[0] != 'G' || bytes[1] != 'I' || bytes[2] != 'F')
-            {
-                return false;
-            }
-
-            width = bytes[6] | (bytes[7] << 8);
-            height = bytes[8] | (bytes[9] << 8);
-            return width > 0 && height > 0;
         }
     }
 }
