@@ -191,14 +191,20 @@ namespace Codeuctivity.OpenXmlPowerTools
         {
             if (node is XElement element)
             {
-                if (simplifyMarkupSettings.RemoveSmartTags &&
-                    element.Name == W.smartTag)
+                if (simplifyMarkupSettings.RemoveSmartTags)
                 {
-                    return element
-                        .Elements()
-                        .Select(e =>
-                            RemoveCustomXmlAndContentControlsTransform(e,
-                                simplifyMarkupSettings));
+                    if (element.Name == W.smartTag)
+                    {
+                        return element
+                            .Elements()
+                            .Select(e =>
+                                RemoveCustomXmlAndContentControlsTransform(e,
+                                    simplifyMarkupSettings));
+                    }
+                    if (element.Name == W.smartTagPr)
+                    {
+                        return null;
+                    }
                 }
 
                 if (simplifyMarkupSettings.RemoveContentControls &&

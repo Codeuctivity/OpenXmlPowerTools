@@ -12,8 +12,7 @@ namespace Codeuctivity.Tests
     {
         private const WordprocessingDocumentType DocumentType = WordprocessingDocumentType.Document;
 
-        private const string SmartTagDocumentTextValue = "The countries include Algeria, Botswana, and Sri Lanka.";
-
+        private const string SmartTagDocumentTextValue = "The countries include Algeria, Botswana, and Sri Lanka.  This is privileged information!";
         private const string SmartTagDocumentXmlString =
 @"<w:document xmlns:w=""http://schemas.openxmlformats.org/wordprocessingml/2006/main"">
   <w:body>
@@ -45,7 +44,18 @@ namespace Codeuctivity.Tests
         </w:smartTag>
       </w:smartTag>
       <w:r>
-        <w:t>.</w:t>
+        <w:t xml:space=""preserve"">.  This is </w:t>
+			</w:r>
+			<w:smartTag w:uri=""schemas-workshare-com/workshare"" w:element=""confidentialinformationexposure"">
+				<w:smartTagPr>
+					<w:attr w:name=""TagType"" w:val=""5""/>
+				</w:smartTagPr>
+				<w:r>
+					<w:t>privileged</w:t>
+				</w:r>
+			</w:smartTag>
+			<w:r>
+				<w:t xml:space=""preserve""> information!</w:t>
       </w:r>
     </w:p>
   </w:body>
