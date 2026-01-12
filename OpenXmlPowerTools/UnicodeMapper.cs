@@ -99,6 +99,11 @@ namespace Codeuctivity.OpenXmlPowerTools
             {
                 return HorizontalTabulation.ToString();
             }
+            // Ignore temporary layout markers that are not actual document content
+            if (element.Name == W.lastRenderedPageBreak)
+            {
+                return string.Empty;
+            }
 
             if (element.Name == W.fldChar)
             {

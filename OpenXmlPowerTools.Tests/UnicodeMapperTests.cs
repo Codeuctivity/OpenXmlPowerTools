@@ -124,5 +124,34 @@ namespace Codeuctivity.Tests
             Assert.Equal(symFromChar1.ToString(SaveOptions.None), symFromChar2.ToString(SaveOptions.None));
             Assert.Equal(symFromChar1.ToString(SaveOptions.None), symFromChar3.ToString(SaveOptions.None));
         }
+
+        private const string LastRenderedPageBreakXmlString =
+@"<w:document xmlns:w=""http://schemas.openxmlformats.org/wordprocessingml/2006/main"">
+  <w:body>
+    <w:p>
+      <w:r>
+        <w:t>ThisIsAParagraphContainingNoNaturalLi</w:t>
+      </w:r>
+      <w:r>
+        <w:lastRenderedPageBreak/>
+        <w:t>neBreaksSoTheLineBreakIsForced.</w:t>
+      </w:r>
+    </w:p>
+  </w:body>
+</w:document>";
+
+        [Fact]
+        public void IgnoresTemporaryLayoutMarkers()
+        {
+            XDocument partDocument = XDocument.Parse(LastRenderedPageBreakXmlString);
+            XElement p = partDocument.Descendants(W.p).Last();
+            string actual = p.Descendants(W.r)
+                .Select(UnicodeMapper.RunToString)
+                .StringConcatenate();
+            // p.Value is "the concatenated text content of this element", which
+            // (in THIS test case, which does not feature any symbols or special
+            // characters) should exactly match the output of UnicodeMapper:
+            Assert.Equal(p.Value, actual);
+        }
     }
 }

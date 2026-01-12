@@ -176,6 +176,7 @@ namespace Codeuctivity.Tests
 
         [Theory]
         [InlineData("DA025-TemplateDocument.docx", "DA-Data.xml", false)]
+        [InlineData("DA-lastRenderedPageBreak.docx", "DA-lastRenderedPageBreak.xml", false)]
         public void DA103_UseXmlDocument(string name, string data, bool err)
         {
             var sourceDir = new DirectoryInfo("../../../../TestFiles/");
