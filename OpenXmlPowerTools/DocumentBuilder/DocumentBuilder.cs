@@ -1,4 +1,4 @@
-﻿#define TestForUnsupportedDocuments
+#define TestForUnsupportedDocuments
 #define MergeStylesWithSameNames
 
 using Codeuctivity.OpenXmlPowerTools.Exceptions;
@@ -1411,9 +1411,11 @@ application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml
                 .Descendants(W.numPr)
                 .Where(n =>
                     {
-                        var zeroId = (int?)n.Attribute(W.id) == 0;
+                        var zeroId = (int?)n.Attribute(W.id) == 0; // nonstandard but handle defensively
+                        var numIdElement = n.Element(W.numId); // standard OpenXML has numId as child element
+                        var hasZeroNumId = numIdElement != null && (int?)numIdElement.Attribute(W.val) == 0;
                         var hasChildInsId = n.Elements(W.ins).Any();
-                        if (zeroId || hasChildInsId)
+                        if (hasZeroNumId || zeroId || hasChildInsId)
                         {
                             return false;
                         }
@@ -2747,6 +2749,12 @@ application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml
                 var idElement = numReference.Descendants(W.numId).FirstOrDefault();
                 if (idElement != null)
                 {
+                    var numId = (int)idElement.Attribute(W.val);
+                    if (numId == 0) // indicates "no numbering"
+                    {
+                        continue; // skip processing
+                    }
+
                     if (oldNumbering == null)
                     {
                         oldNumbering = sourceDocument.MainDocumentPart.NumberingDefinitionsPart.GetXDocument();
@@ -2784,111 +2792,107 @@ application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml
                             newNumbering.Add(new XElement(W.numbering, NamespaceAttributes));
                         }
                     }
-                    var numId = (int)idElement.Attribute(W.val);
-                    if (numId != 0)
+                    var element = oldNumbering
+                        .Descendants(W.num)
+                        .FirstOrDefault(p => (int)p.Attribute(W.numId) == numId);
+                    if (element == null)
                     {
-                        var element = oldNumbering
-                            .Descendants(W.num)
-.FirstOrDefault(p => (int)p.Attribute(W.numId) == numId);
-                        if (element == null)
-                        {
-                            continue;
-                        }
+                        continue;
+                    }
 
-                        // Copy abstract numbering element, if necessary (use matching NSID)
-                        var abstractNumIdStr = (string)element
-                            .Elements(W.abstractNumId)
-                            .First()
+                    // Copy abstract numbering element, if necessary (use matching NSID)
+                    var abstractNumIdStr = (string)element
+                        .Elements(W.abstractNumId)
+                        .First()
+                        .Attribute(W.val);
+                    if (!int.TryParse(abstractNumIdStr, out var abstractNumId))
+                    {
+                        throw new DocumentBuilderException("Invalid document - invalid value for abstractNumId");
+                    }
+
+                    var abstractElement = oldNumbering
+                        .Descendants()
+                        .Elements(W.abstractNum)
+                        .First(p => (int)p.Attribute(W.abstractNumId) == abstractNumId);
+                    var nsidElement = abstractElement
+                        .Element(W.nsid);
+                    string? abstractNSID = null;
+                    if (nsidElement != null)
+                    {
+                        abstractNSID = (string)nsidElement
                             .Attribute(W.val);
-                        if (!int.TryParse(abstractNumIdStr, out var abstractNumId))
-                        {
-                            throw new DocumentBuilderException("Invalid document - invalid value for abstractNumId");
-                        }
+                    }
 
-                        var abstractElement = oldNumbering
-                            .Descendants()
-                            .Elements(W.abstractNum)
-.First(p => (int)p.Attribute(W.abstractNumId) == abstractNumId);
-                        var nsidElement = abstractElement
-                            .Element(W.nsid);
-                        string? abstractNSID = null;
-                        if (nsidElement != null)
+                    var newAbstractElement = newNumbering
+                        .Descendants()
+                        .Elements(W.abstractNum)
+                        .Where(e => e.Annotation<FromPreviousSourceSemaphore>() == null)
+                        .FirstOrDefault(p =>
                         {
-                            abstractNSID = (string)nsidElement
-                                .Attribute(W.val);
-                        }
-
-                        var newAbstractElement = newNumbering
-                            .Descendants()
-                            .Elements(W.abstractNum)
-                            .Where(e => e.Annotation<FromPreviousSourceSemaphore>() == null)
-.FirstOrDefault(p =>
+                            var thisNsidElement = p.Element(W.nsid);
+                            if (thisNsidElement == null)
                             {
-                                var thisNsidElement = p.Element(W.nsid);
-                                if (thisNsidElement == null)
-                                {
-                                    return false;
-                                }
-
-                                return (string)thisNsidElement.Attribute(W.val) == abstractNSID;
-                            });
-                        if (newAbstractElement == null)
-                        {
-                            newAbstractElement = new XElement(abstractElement);
-                            newAbstractElement.Attribute(W.abstractNumId).Value = abstractNumber.ToString();
-                            abstractNumber++;
-                            if (newNumbering.Root.Elements(W.abstractNum).Any())
-                            {
-                                newNumbering.Root.Elements(W.abstractNum).Last().AddAfterSelf(newAbstractElement);
-                            }
-                            else
-                            {
-                                newNumbering.Root.Add(newAbstractElement);
+                                return false;
                             }
 
-                            foreach (var pictId in newAbstractElement.Descendants(W.lvlPicBulletId))
-                            {
-                                var bulletId = (string)pictId.Attribute(W.val);
-                                var numPicBullet = oldNumbering
-                                    .Descendants(W.numPicBullet)
-                                    .FirstOrDefault(d => (string)d.Attribute(W.numPicBulletId) == bulletId);
-                                var maxNumPicBulletId = new int[] { -1 }.Concat(
-                                    newNumbering.Descendants(W.numPicBullet)
-                                    .Attributes(W.numPicBulletId)
-                                    .Select(a => (int)a))
-                                    .Max() + 1;
-                                var newNumPicBullet = new XElement(numPicBullet);
-                                newNumPicBullet.Attribute(W.numPicBulletId).Value = maxNumPicBulletId.ToString();
-                                pictId.Attribute(W.val).Value = maxNumPicBulletId.ToString();
-                                newNumbering.Root.AddFirst(newNumPicBullet);
-                            }
-                        }
-                        var newAbstractId = newAbstractElement.Attribute(W.abstractNumId).Value;
-
-                        // Copy numbering element, if necessary (use matching element with no overrides)
-                        XElement newElement;
-                        if (numIdMap.ContainsKey(numId))
+                            return (string)thisNsidElement.Attribute(W.val) == abstractNSID;
+                        });
+                    if (newAbstractElement == null)
+                    {
+                        newAbstractElement = new XElement(abstractElement);
+                        newAbstractElement.Attribute(W.abstractNumId).Value = abstractNumber.ToString();
+                        abstractNumber++;
+                        if (newNumbering.Root.Elements(W.abstractNum).Any())
                         {
-                            newElement = newNumbering
-                                .Descendants()
-                                .Elements(W.num)
-                                .Where(e => e.Annotation<FromPreviousSourceSemaphore>() == null)
-.First(p => (int)p.Attribute(W.numId) == numIdMap[numId]);
+                            newNumbering.Root.Elements(W.abstractNum).Last().AddAfterSelf(newAbstractElement);
                         }
                         else
                         {
-                            newElement = new XElement(element);
-                            newElement
-                                .Elements(W.abstractNumId)
-                                .First()
-                                .Attribute(W.val).Value = newAbstractId;
-                            newElement.Attribute(W.numId).Value = number.ToString();
-                            numIdMap.Add(numId, number);
-                            number++;
-                            newNumbering.Root.Add(newElement);
+                            newNumbering.Root.Add(newAbstractElement);
                         }
-                        idElement.Attribute(W.val).Value = newElement.Attribute(W.numId).Value;
+
+                        foreach (var pictId in newAbstractElement.Descendants(W.lvlPicBulletId))
+                        {
+                            var bulletId = (string)pictId.Attribute(W.val);
+                            var numPicBullet = oldNumbering
+                                .Descendants(W.numPicBullet)
+                                .FirstOrDefault(d => (string)d.Attribute(W.numPicBulletId) == bulletId);
+                            var maxNumPicBulletId = new int[] { -1 }.Concat(
+                                newNumbering.Descendants(W.numPicBullet)
+                                .Attributes(W.numPicBulletId)
+                                .Select(a => (int)a))
+                                .Max() + 1;
+                            var newNumPicBullet = new XElement(numPicBullet);
+                            newNumPicBullet.Attribute(W.numPicBulletId).Value = maxNumPicBulletId.ToString();
+                            pictId.Attribute(W.val).Value = maxNumPicBulletId.ToString();
+                            newNumbering.Root.AddFirst(newNumPicBullet);
+                        }
                     }
+                    var newAbstractId = newAbstractElement.Attribute(W.abstractNumId).Value;
+
+                    // Copy numbering element, if necessary (use matching element with no overrides)
+                    XElement newElement;
+                    if (numIdMap.ContainsKey(numId))
+                    {
+                        newElement = newNumbering
+                            .Descendants()
+                            .Elements(W.num)
+                            .Where(e => e.Annotation<FromPreviousSourceSemaphore>() == null)
+                            .First(p => (int)p.Attribute(W.numId) == numIdMap[numId]);
+                    }
+                    else
+                    {
+                        newElement = new XElement(element);
+                        newElement
+                            .Elements(W.abstractNumId)
+                            .First()
+                            .Attribute(W.val).Value = newAbstractId;
+                        newElement.Attribute(W.numId).Value = number.ToString();
+                        numIdMap.Add(numId, number);
+                        number++;
+                        newNumbering.Root.Add(newElement);
+                    }
+                    idElement.Attribute(W.val).Value = newElement.Attribute(W.numId).Value;
                 }
             }
             if (newNumbering != null)

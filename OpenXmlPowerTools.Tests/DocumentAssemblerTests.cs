@@ -107,6 +107,7 @@ namespace Codeuctivity.Tests
         [InlineData("DA264-InvalidRunLevelRepeat.docx", "DA-Data.xml", true)]
         [InlineData("DA265-RunLevelRepeatWithWhiteSpaceBefore.docx", "DA-Data.xml", false)]
         [InlineData("DA266-RunLevelRepeat-NoData.docx", "DA-Data.xml", true)]
+        [InlineData("DA268-Block-Conditional-In-Table-Cell.docx", "DA268-data.xml", false)]
         public void DA101(string name, string data, bool err)
         {
             var sourceDir = new DirectoryInfo("../../../../TestFiles/");
@@ -154,6 +155,24 @@ namespace Codeuctivity.Tests
                             .Elements(W.r)
                             .Elements(W.br).Count();
             Assert.Equal(4, brCount);
+        }
+
+        [Fact]
+        public void DA240()
+        {
+            string name = "DA240-Whitespace.docx";
+            DA101(name, "DA240-Whitespace.xml", false);
+            var assembledDocx = new FileInfo(Path.Combine(TestUtil.TempDir.FullName, name.Replace(".docx", "-processed-by-DocumentAssembler.docx")));
+            WmlDocument afterAssembling = new WmlDocument(assembledDocx.FullName);
+
+            // when elements are inserted that begin or end with white space, make sure white space is preserved
+            string firstParaTextIncorrect = afterAssembling.MainDocumentPart.Element(W.body).Elements(W.p).First().Value;
+            Assert.Equal("Content may or may not have spaces: he/she; he, she; he and she.", firstParaTextIncorrect);
+            // warning: XElement.Value returns the string resulting from direct concatenation of all W.t elements. This is fast but ignores
+            // proper handling of xml:space="preserve" attributes, which Word honors when rendering content. Below we also check
+            // the result of UnicodeMapper.RunToString, which has been enhanced to take xml:space="preserve" into account.
+            string firstParaTextCorrect = InnerText(afterAssembling.MainDocumentPart.Element(W.body).Elements(W.p).First());
+            Assert.Equal("Content may or may not have spaces: he/she; he, she; he and she.", firstParaTextCorrect);
         }
 
         [Theory]
@@ -487,6 +506,15 @@ namespace Codeuctivity.Tests
         private const string WidePngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAZAAAADICAIAAABJdyC1AAACuUlEQVR4nO3UMQ7CQBAEwT3EvxEvXz/BZKalqniCifrs7gAUvGfmnO/TNwBu7H5edxuAfyFYQIZgARmCBWQIFpAhWECGYAEZggVkCBaQIVhAhmABGYIFZAgWkCFYQIZgARmCBWQIFpAhWECGYAEZggVkCBaQIVhAhmABGYIFZAgWkCFYQIZgARmCBWQIFpAhWECGYAEZggVkCBaQIVhAhmABGYIFZAgWkCFYQIZgARmCBWQIFpAhWECGYAEZggVkCBaQIVhAhmABGYIFZAgWkCFYQIZgARmCBWQIFpAhWECGYAEZggVkCBaQIVhAhmABGYIFFzMzu2y8A5u4PQZkIj89BEMEAAAAASUVORK5CYII=";
         private const string TallPngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAMgAAAGQCAIAAABkkLjnAAAEF0lEQVR4nO3S0QkCURAEwX1i3mLke0lcI3hVAQzz0Wd3B+72npnzPbfv8mT72devP/CfhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkhEVCWCSERUJYJIRFQlgkzu42y8yTXVnDDBu1Y983AAAAAElFTkSuQmCC";
         private const string TruncatedGifBase64 = "R0lGODlhyABQAA==";
+
+        private static string InnerText(XContainer e)
+        {
+            return e.Descendants(W.r)
+                .Where(r => r.Parent.Name != W.del)
+                .Select(UnicodeMapper.RunToString)
+                .StringConcatenate();
+        }
+
         private static readonly List<string> s_ExpectedErrors = new List<string>()
         {
             "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:evenHBand' attribute is not declared.",

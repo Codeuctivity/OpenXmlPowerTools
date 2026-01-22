@@ -153,5 +153,125 @@ namespace Codeuctivity.Tests
             // characters) should exactly match the output of UnicodeMapper:
             Assert.Equal(p.Value, actual);
         }
+
+        private const string PreserveSpacingXmlString =
+@"<w:document xmlns:w=""http://schemas.openxmlformats.org/wordprocessingml/2006/main"">
+  <w:body>
+    <w:p>
+      <w:r>
+        <w:t xml:space=""preserve"">The following space is retained: </w:t>
+      </w:r>
+      <w:r>
+        <w:t>but this one is not: </w:t>
+      </w:r>
+      <w:r>
+        <w:t xml:space=""preserve"">. Similarly these two lines should have only a space between them: </w:t>
+      </w:r>
+      <w:r>
+        <w:t>
+          Line 1!
+Line 2!
+        </w:t>
+      </w:r>
+    </w:p>
+  </w:body>
+</w:document>";
+
+        [Fact]
+        public void HonorsXmlSpace()
+        {
+            // This somewhat rudimentary test is superceded by TreatsXmlSpaceLikeWord() below,
+            // but it has been left in to provide a simple/direct illustration of a couple of
+            // the specific test cases covered by that more extensive suite.
+            XDocument partDocument = XDocument.Parse(PreserveSpacingXmlString);
+            XElement p = partDocument.Descendants(W.p).Last();
+            string innerText = p.Descendants(W.r)
+                .Select(UnicodeMapper.RunToString)
+                .StringConcatenate();
+            Assert.Equal(@"The following space is retained: but this one is not:. Similarly these two lines should have only a space between them: Line 1! Line 2!", innerText);
+        }
+
+        // Verifies that UnicodeMapper.RunToString interprets whitespace in <w:t> elements
+        // exactly the way Microsoft Word does, including honoring xml:space="preserve".
+        // This is essential because RunToString is used by higher‑level features
+        // (OpenXmlRegex, DocumentAssembler, etc.) that rely on its output to reflect the
+        // text an end‑user would actually see and edit in Word.
+        //
+        // Word accepts a wide range of “valid” DOCX input, but it normalizes that input
+        // into a canonical form when displaying or saving the document. These tests
+        // compare RunToString’s output against Word’s canonicalized output to ensure
+        // that whitespace is treated as semantic content in the same way Word treats it.
+        [Fact]
+        public void TreatsXmlSpaceLikeWord()
+        {
+            var sourceDir = new System.IO.DirectoryInfo("../../../../TestFiles/");
+            // Test document: crafted to include many whitespace patterns that Word accepts as valid input
+            var testDoc = new System.IO.FileInfo(System.IO.Path.Combine(sourceDir.FullName, "UM-Whitespace-test.docx"));
+            var testWmlDoc = new WmlDocument(testDoc.FullName);
+            var testParagraphs = testWmlDoc.MainDocumentPart
+                            .Element(W.body)
+                            .Elements(W.p).ToList();
+            // Canonical document: the same test document after being opened and saved by Word,
+            // representing Word's own normalized interpretation of that whitespace
+            var expectedDoc = new System.IO.FileInfo(System.IO.Path.Combine(sourceDir.FullName, "UM-Whitespace-Word-saved.docx"));
+            var expectedWmlDoc = new WmlDocument(expectedDoc.FullName);
+            var expectedParagraphs = expectedWmlDoc.MainDocumentPart
+                            .Element(W.body)
+                            .Elements(W.p).ToList();
+            // Iterate through pairs of paragraphs (test name, test content, expected result)
+            for (int i = 0; i < testParagraphs.Count - 1; i += 2)
+            {
+                var testNameParagraph = testParagraphs[i];
+                var testContentParagraph = testParagraphs[i + 1];
+                // Get the test name from the first paragraph
+                var testName = testNameParagraph.Descendants(W.t)
+                    .Select(t => (string)t)
+                    .StringConcatenate();
+                // Get the actual result by calling UnicodeMapper.RunToString on the test content runs
+                var actualResult = testContentParagraph.Descendants(W.r)
+                    .Select(UnicodeMapper.RunToString)
+                    .StringConcatenate();
+                // Find corresponding expected result paragraph (same index in expected document)
+                var expectedResult = ExtractExpectedFromWord(expectedParagraphs[i + 1]);
+                Assert.True(
+                    expectedResult == actualResult,
+                    $"Test '{testName}' failed. Expected: [{expectedResult}] Actual: [{actualResult}]"
+                );
+            }
+        }
+
+        // Extracts the expected text from Word’s canonicalized output for the whitespace tests.
+        // This helper intentionally handles *only* the constructs that Word emits in the saved
+        // version of UM-whitespace-test.docx:
+        //   • <w:t>      → literal text
+        //   • <w:tab/>   → '\t'
+        //   • <w:lastRenderedPageBreak/> (intentionally ignored)
+        // If any other run-level element appears, it means Word has emitted something this test
+        // was not designed to handle, and the test fails loudly. This prevents the helper
+        // from drifting toward reimplementing UnicodeMapper.RunToString.
+        private static string ExtractExpectedFromWord(XElement p)
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (var run in p.Elements(W.r))
+            {
+                foreach (var child in run.Elements())
+                {
+                    if (child.Name == W.t)
+                    {
+                        sb.Append((string)child);
+                    }
+                    else if (child.Name == W.tab)
+                    {
+                        sb.Append('\t');
+                    }
+                    else if (child.Name != W.lastRenderedPageBreak)
+                    {
+                        throw new System.InvalidOperationException(
+                            $"Unexpected element <{child.Name.LocalName}> encountered in expected Word output.");
+                    }
+                }
+            }
+            return sb.ToString();
+        }
     }
 }

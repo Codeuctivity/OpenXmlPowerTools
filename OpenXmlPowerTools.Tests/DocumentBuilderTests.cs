@@ -473,6 +473,56 @@ namespace Codeuctivity.Tests
         }
 
         [Fact]
+        public void DB012a_NumberingWithZeroIdIsValid()
+        {
+            // This document has a numbering definition with a zero id (explicitly indicating "no numbering").
+            var name = "DB012a-No-Numbering0.docx";
+            var sourceDir = new DirectoryInfo("../../../../TestFiles/");
+            var sourceDocx = new FileInfo(Path.Combine(sourceDir.FullName, name));
+            var sources = new List<Source>()
+            {
+                new Source(new WmlDocument(sourceDocx.FullName)),
+            };
+            var processedDestDocx = new FileInfo(Path.Combine(TestUtil.TempDir.FullName,
+                sourceDocx.Name.Replace(".docx", "-processed-by-DocumentBuilder.docx")));
+            DocumentBuilder.BuildDocument(sources, processedDestDocx.FullName);
+            Validate(processedDestDocx);
+        }
+
+        [Fact]
+        public void DB012b_NumberingWithZeroIdWorks()
+        {
+            var sourceDir = new DirectoryInfo("../../../../TestFiles/");
+            var source0 = new FileInfo(Path.Combine(sourceDir.FullName, "DB012a-No-Numbering0.docx"));
+            var source1 = new FileInfo(Path.Combine(sourceDir.FullName, "DB012a-No-Numbering1.docx"));
+            var doc1 = new WmlDocument(source0.FullName);
+            using (var mem = new MemoryStream())
+            {
+                mem.Write(doc1.DocumentByteArray, 0, doc1.DocumentByteArray.Length);
+                using (var doc = WordprocessingDocument.Open(mem, true))
+                {
+                    var xDoc = doc.MainDocumentPart.GetXDocument();
+                    var frontMatterPara = xDoc.Root.Elements(W.body).Elements(W.p).FirstOrDefault();
+                    frontMatterPara.ReplaceWith(
+                        new XElement(PtOpenXml.Insert,
+                            new XAttribute("Id", "Front")));
+                    doc.MainDocumentPart.PutXDocument();
+                }
+                doc1.DocumentByteArray = mem.ToArray();
+            }
+
+            var sources = new List<Source>()
+            {
+                new Source(doc1, true),
+                new Source(new WmlDocument(source1.FullName), "Front"),
+            };
+            var processedDestDocx =
+                new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB012b-NumberingWithZeroIdWorks.docx"));
+            DocumentBuilder.BuildDocument(sources, processedDestDocx.FullName);
+            Validate(processedDestDocx);
+        }
+
+        [Fact]
         public void DB013a_LocalizedStyleIds_Heading()
         {
             // Each of these documents have changed the font color of the Heading 1 style, one to red, the other to green.

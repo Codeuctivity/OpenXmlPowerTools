@@ -654,7 +654,7 @@ namespace Codeuctivity.OpenXmlPowerTools
                             p.Add(new XElement(W.r,
                                     para.Elements(W.r).Elements(W.rPr).FirstOrDefault(),
                                 (p.Elements().Count() > 1) ? new XElement(W.br) : null,
-                                new XElement(W.t, line)));
+                                new XElement(W.t, GetXmlSpaceAttribute(line), line)));
                         }
                         return p;
                     }
@@ -666,7 +666,7 @@ namespace Codeuctivity.OpenXmlPowerTools
                             list.Add(new XElement(W.r,
                                 run.Elements().Where(e => e.Name != W.t),
                                 (list.Count > 0) ? new XElement(W.br) : null,
-                                new XElement(W.t, line)));
+                                new XElement(W.t, GetXmlSpaceAttribute(line), line)));
                         }
                         return list;
                     }
@@ -873,9 +873,24 @@ namespace Codeuctivity.OpenXmlPowerTools
                     }
                     return null;
                 }
+                var transformedNodes = element.Nodes().Select(n => ContentReplacementTransform(n, data, templateError, owningPart));
+                if (element.Name == W.tc)
+                {
+                    // Check if the table cell contains any block-level elements
+                    // Valid block-level elements in a table cell: p (paragraph), tbl (table), sdt (structured document tag), customXml
+                    var nodesList = transformedNodes.ToList();
+                    var hasBlockLevelContent = nodesList.Any(n => n is XElement xe && 
+                        (xe.Name == W.p || xe.Name == W.tbl || xe.Name == W.sdt || xe.Name == W.customXml));
+                    if (!hasBlockLevelContent)
+                    {
+                        // Table cells must contain at least one block-level element -- add an empty paragraph
+                        nodesList.Add(new XElement(W.p));
+                    }
+                    transformedNodes = nodesList;
+                }
                 return new XElement(element.Name,
                     element.Attributes(),
-                    element.Nodes().Select(n => ContentReplacementTransform(n, data, templateError, owningPart)));
+                    transformedNodes);
             }
             return node;
         }
@@ -1399,6 +1414,19 @@ namespace Codeuctivity.OpenXmlPowerTools
             }
 
             return xPathSelectResult.ToString();
+        }
+
+        private static XAttribute GetXmlSpaceAttribute(string textOfTextElement)
+        {
+            if (!string.IsNullOrEmpty(textOfTextElement))
+            {
+                if (char.IsWhiteSpace(textOfTextElement[0]) ||
+                    char.IsWhiteSpace(textOfTextElement[textOfTextElement.Length - 1]))
+                {
+                    return new XAttribute(XNamespace.Xml + "space", "preserve");
+                }
+            }
+            return null;
         }
     }
 }

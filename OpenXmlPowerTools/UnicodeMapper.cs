@@ -60,7 +60,10 @@ namespace Codeuctivity.OpenXmlPowerTools
             // For w:t elements, we obviously want the element's value.
             if (element.Name == W.t)
             {
-                return (string)element;
+                // Emulate Word's handling of the xml:space attribute on text elements
+                XAttribute? spaceAttribute = element.Attribute(XNamespace.Xml + "space");
+                string? space = spaceAttribute?.Value;
+                return NormalizeWhitespace((string) element, space == "preserve");
             }
 
             // Turn elements representing special characters into their corresponding
@@ -139,6 +142,50 @@ namespace Codeuctivity.OpenXmlPowerTools
             // Elements we don't recognize will be turned into a character that
             // doesn't typically appear in documents.
             return StartOfHeading.ToString();
+        }
+
+        /// <summary>
+        /// Emulate the way Word interprets the content of text elements
+        /// depending on whether the xml:space="preserve" attribute is present.
+        /// </summary>
+        /// <param name="text">The entire content of the w:t element.</param>
+        /// <returns>The corresponding text string Word would display, print, save,
+        /// and allow to be edited.</returns>
+        private static string NormalizeWhitespace(string text, bool preserve)
+        {
+            if (string.IsNullOrEmpty(text))
+                return string.Empty;
+            // Trim leading & trailing whitespace when NOT preserving
+            ReadOnlySpan<char> span = preserve
+                ? text.AsSpan()
+                : text.AsSpan().Trim();
+            if (span.Length == 0)
+                return string.Empty;
+            var sb = new System.Text.StringBuilder(span.Length);
+            int i = 0;
+            while (i < span.Length)
+            {
+                char c = span[i];
+                switch (c)
+                {
+                    case '\r': // CR or CRLF → space
+                        sb.Append(' ');
+                        if (i + 1 < span.Length && span[i + 1] == '\n')
+                            i++; // skip LF so CRLF becomes one space
+                        break;
+                    case '\n': // LF → space
+                        sb.Append(' ');
+                        break;
+                    case '\t': // TAB preserved or converted to space, depending on mode
+                        sb.Append(preserve ? c : ' ');
+                        break;
+                    default: // SPACE or any other character → preserved exactly
+                        sb.Append(c);
+                        break;
+                }
+                i++;
+            }
+            return sb.ToString();
         }
 
         /// <summary>
