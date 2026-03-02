@@ -31,14 +31,14 @@ jobs:
       - name: Test
         run: dotnet test --no-build --verbosity normal --configuration Release --logger "trx;LogFileName=${{ runner.workspace }}/OpenXmlPowerTools/TestResult/test_results.trx"
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: matrix.os == 'ubuntu-latest'
         with:
           name: build-artifacts
           path: |
             OpenXmlPowerTools/bin/Release/
       - name: Publish Unit Test Results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: TestResult
