@@ -1,6 +1,6 @@
 # OpenXmlPowerTools
 
-- Linux, Windows and MacOs support was added by this fork
+- Linux, Windows, and macOS support was added by this fork
 
 ## Example - Convert DOCX to HTML
 
