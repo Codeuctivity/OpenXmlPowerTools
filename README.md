@@ -4,15 +4,14 @@
 
 ## Focus of this fork
 
+- Maintaining
 - Linux, Windows and MacOs support was added by this fork
-- Conversion of DOCX to HTML/CSS
 
-## Known missing features - Conversion of DOCX to HTML/CSS
+## Conversion of DOCX to HTML/CSS - Known missing features
 
 - [floating settings of images are ignored](https://stackoverflow.com/questions/70277539/how-to-handle-floating-images-in-openxml-and-convert-to-html-equivalent/73639409#73639409)
 - [W.oMath](https://github.com/Codeuctivity/OpenXmlToHtml/issues/74)
 - many more
-
 
 ## Example - Convert DOCX to HTML
 
