@@ -1,9 +1,6 @@
 # OpenXmlPowerTools
 
-## Focus of this fork
-
-- Linux, Windows and MacOs support
-- Conversion of DOCX to HTML/CSS.
+- Linux, Windows and MacOs support was added by this fork
 
 ## Example - Convert DOCX to HTML
 
