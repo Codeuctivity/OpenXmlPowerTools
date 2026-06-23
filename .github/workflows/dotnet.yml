@@ -82,5 +82,4 @@ jobs:
           NUGET_TOKEN_EXISTS: ${{ secrets.NUGET_TEST_TOKEN }}
         if: env.NUGET_TOKEN_EXISTS != ''
         run: |
-          ls
           dotnet nuget push *.nupkg --skip-duplicate --api-key ${{secrets.NUGET_TEST_TOKEN}} --source https://apiint.nugettest.org/v3/index.json
