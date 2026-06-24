@@ -7,7 +7,7 @@
   <ItemGroup>
     <PackageReference Include="Codeuctivity.HtmlRenderer" Version="4.0.529" />
     <PackageReference Include="Codeuctivity.SkiaSharpCompare" Version="3.2.286" />
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.4" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.148.0" />
     <PackageReference Include="coverlet.collector" Version="10.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
