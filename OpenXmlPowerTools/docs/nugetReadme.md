@@ -1,11 +1,6 @@
 # OpenXmlPowerTools
 
-[![.NET build and test](https://github.com/Codeuctivity/OpenXmlPowerTools/actions/workflows/dotnet.yml/badge.svg)](https://github.com/Codeuctivity/OpenXmlPowerTools/actions/workflows/dotnet.yml) [![Nuget](https://img.shields.io/nuget/v/Codeuctivity.OpenXmlPowerTools.svg)](https://www.nuget.org/packages/Codeuctivity.OpenXmlPowerTools/)
-
-## Focus of this fork
-
-- Linux, Windows and MacOs support
-- Conversion of DOCX to HTML/CSS.
+- Linux, Windows, and macOS support was added by this fork
 
 ## Example - Convert DOCX to HTML
 

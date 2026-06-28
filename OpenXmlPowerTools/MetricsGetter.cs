@@ -112,18 +112,11 @@ namespace Codeuctivity.OpenXmlPowerTools
         {
             try
             {
-                var skFontStyle = SKFontStyle.Normal;
-                if (fs.HasFlag(FontStyle.Bold) && fs.HasFlag(FontStyle.Italic))
-                    skFontStyle = new SKFontStyle(SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic);
-                else if (fs.HasFlag(FontStyle.Bold))
-                    skFontStyle = new SKFontStyle(SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
-                else if (fs.HasFlag(FontStyle.Italic))
-                    skFontStyle = new SKFontStyle(SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic);
-
-                using var font = new SKFont(typeface, (float)sz / 2f);
-                using var paint = new SKPaint(font);
-                var bounds = new SKRect();
-                paint.MeasureText(text, ref bounds);
+                var fallbackTypeface = fs == FontStyle.Bold
+                    ? SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold)
+                    : SKTypeface.FromFamilyName("Arial", SKFontStyle.Normal);
+                using var font = new SKFont(typeface ?? fallbackTypeface, size: (float)sz / 2f);
+                font.MeasureText(text, out var bounds);
                 return (int)bounds.Width;
             }
             catch
