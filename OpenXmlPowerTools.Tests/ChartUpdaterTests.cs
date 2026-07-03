@@ -5,7 +5,7 @@ using System;
 using System.IO;
 using Xunit;
 
-namespace Codeuctivity.Tests
+namespace OpenXmlPowerTools.Tests
 {
     public class CuTests
     {

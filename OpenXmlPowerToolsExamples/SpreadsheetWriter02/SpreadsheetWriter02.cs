@@ -16,18 +16,15 @@ namespace SpreadsheetWriter02
             {
                 Worksheets = new WorksheetDfn[]
                 {
-                    new WorksheetDfn
-                    {
+                    new() {
                         Name = "MyFirstSheet",
                         ColumnHeadings = new CellDfn[]
                         {
-                            new CellDfn
-                            {
+                            new() {
                                 Value = "DataType",
                                 Bold = true,
                             },
-                            new CellDfn
-                            {
+                            new() {
                                 Value = "Value",
                                 Bold = true,
                                 HorizontalCellAlignment = HorizontalCellAlignment.Right,
@@ -35,171 +32,159 @@ namespace SpreadsheetWriter02
                         },
                         Rows = new RowDfn[]
                         {
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "Boolean",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Boolean,
                                         Value = true,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "Boolean",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Boolean,
                                         Value = false,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "String",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "A String",
                                         HorizontalCellAlignment = HorizontalCellAlignment.Right,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "int",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = 100,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "int?",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = (int?)100,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "int? (is null)",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = null,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "uint",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = (uint)101,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "long",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = long.MaxValue,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "float",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = (float)123.45,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "double",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = 123.45,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "decimal",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = (decimal)123.45,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Date,
                                         Value = new DateTime(2012, 1, 8),
                                         FormatCode = "mm-dd-yy",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Date,
                                         Value = new DateTime(2012, 1, 9),
                                         FormatCode = "mm-dd-yy",

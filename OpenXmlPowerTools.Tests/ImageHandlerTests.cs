@@ -5,7 +5,7 @@ using Codeuctivity.OpenXmlPowerTools.OpenXMLWordprocessingMLToHtmlConverter;
 using SkiaSharp;
 using Xunit;
 
-namespace Codeuctivity.Tests
+namespace OpenXmlPowerTools.Tests
 {
     public class ImageHandlerTests
     {

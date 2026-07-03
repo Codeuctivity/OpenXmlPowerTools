@@ -1,18 +1,18 @@
 ﻿using Codeuctivity.OpenXmlPowerTools;
 using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Wordprocessing;
 using DocumentFormat.OpenXml.Validation;
+using DocumentFormat.OpenXml.Wordprocessing;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using Xunit;
-using System.Globalization;
 
-namespace Codeuctivity.Tests
+namespace OpenXmlPowerTools.Tests
 {
     public class DaTests
     {
@@ -126,7 +126,7 @@ namespace Codeuctivity.Tests
                 ms.Write(afterAssembling.DocumentByteArray, 0, afterAssembling.DocumentByteArray.Length);
                 using var wDoc = WordprocessingDocument.Open(ms, true);
                 var v = new OpenXmlValidator();
-                var valErrors = v.Validate(wDoc).Where(ve => !s_ExpectedErrors.Contains(ve.Description));
+                var valErrors = v.Validate(wDoc, TestContext.Current.CancellationToken).Where(ve => !s_ExpectedErrors.Contains(ve.Description));
 
                 var sb = new StringBuilder();
                 foreach (var item in valErrors.Select(r => r.Description).OrderBy(t => t).Distinct())
@@ -215,7 +215,7 @@ namespace Codeuctivity.Tests
                 ms.Write(afterAssembling.DocumentByteArray, 0, afterAssembling.DocumentByteArray.Length);
                 using var wDoc = WordprocessingDocument.Open(ms, true);
                 var v = new OpenXmlValidator();
-                var valErrors = v.Validate(wDoc).Where(ve => !s_ExpectedErrors.Contains(ve.Description));
+                var valErrors = v.Validate(wDoc, TestContext.Current.CancellationToken).Where(ve => !s_ExpectedErrors.Contains(ve.Description));
                 Assert.Empty(valErrors);
             }
 
@@ -515,8 +515,8 @@ namespace Codeuctivity.Tests
                 .StringConcatenate();
         }
 
-        private static readonly List<string> s_ExpectedErrors = new List<string>()
-        {
+        private static readonly List<string> s_ExpectedErrors =
+        [
             "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:evenHBand' attribute is not declared.",
             "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:evenVBand' attribute is not declared.",
             "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:firstColumn' attribute is not declared.",
@@ -531,6 +531,6 @@ namespace Codeuctivity.Tests
             "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:noVBand' attribute is not declared.",
             "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:oddHBand' attribute is not declared.",
             "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:oddVBand' attribute is not declared.",
-        };
+        ];
     }
 }
