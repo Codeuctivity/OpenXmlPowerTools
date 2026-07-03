@@ -1,0 +1,47 @@
+<Solution>
+  <Folder Name="/examples/">
+    <Project Path="OpenXmlPowerToolsExamples/ChartUpdater01/ChartUpdater01.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/DocumentAssembler/DocumentAssembler.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/DocumentAssembler01/DocumentAssembler01.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/DocumentAssembler02/DocumentAssembler02.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/DocumentAssembler03/DocumentAssembler03.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/DocumentBuilder01/DocumentBuilder01.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/DocumentBuilder02/DocumentBuilder02.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/DocumentBuilder03/DocumentBuilder03.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/DocumentBuilder04/DocumentBuilder04.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/FieldRetriever01/FieldRetriever01.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/FormattingAssembler01/FormattingAssembler01.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/Formulas01/Formulas01.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/HtmlConverter01/HtmlConverter01.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/HtmlToWmlConverter01/HtmlToWmlConverter01.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/HtmlToWmlConverter02/HtmlToWmlConverter02.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/ListItemRetriever01/ListItemRetriever01.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/MarkupSimplifierApp/MarkupSimplifierApp.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/MetricsGetter01/MetricsGetter01.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/OpenXmlRegex01/OpenXmlRegex01.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/PivotTables01/PivotTables01.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/ReferenceAdder01/ReferenceAdder01.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/RevisionAccepter01/RevisionAccepter01.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/SmlDataRetriever01/SmlDataRetriever01.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/SpreadsheetWriter01/SpreadsheetWriter01.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/SpreadsheetWriter02/SpreadsheetWriter02.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/TextReplacer01/TextReplacer01.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/TextReplacer02/TextReplacer02.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/WmlToHtmlConverter01/WmlToHtmlConverter01.csproj" />
+    <Project Path="OpenXmlPowerToolsExamples/WmlToHtmlConverter02/WmlToHtmlConverter02.csproj" />
+  </Folder>
+  <Folder Name="/OpenXmlPowerToolsExamples/">
+    <Project Path="OpenXmlPowerToolsExamples/DocumentAssembler04/DocumentAssembler04.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".github/dependabot.yml" />
+    <File Path=".github/workflows/cla.yml" />
+    <File Path=".github/workflows/dotnet.yml" />
+    <File Path=".github/workflows/stale.yml" />
+    <File Path="LICENSE.md" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="OpenXmlPowerTools.Tests/OpenXmlPowerTools.Tests.csproj" />
+  <Project Path="OpenXmlPowerTools/OpenXmlPowerTools.csproj" />
+</Solution>

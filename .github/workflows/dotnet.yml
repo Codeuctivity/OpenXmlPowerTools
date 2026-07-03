@@ -5,13 +5,13 @@ env:
 
 on:
   push:
-  pull_request:
+    paths-ignore:
+      - '*.md'
 
 jobs:
   build:
     if: |
-      github.event_name == 'push' ||
-      (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository)
+      github.event_name == 'push' 
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -44,7 +44,7 @@ jobs:
           path: "TestResult/**/*"
 
   deployRelease:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/release'
+    if: github.ref == 'refs/heads/release'
     runs-on: ubuntu-latest
     needs: build
     steps:
@@ -68,7 +68,7 @@ jobs:
           gh release create ${{env.CURRENT_VERSION}} *.*nupkg --generate-notes
 
   deployTest:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: build
     steps:
