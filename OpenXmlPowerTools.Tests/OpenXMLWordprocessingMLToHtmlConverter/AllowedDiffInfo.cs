@@ -1,4 +1,4 @@
-﻿namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
+﻿namespace OpenXmlPowerTools.Tests.OpenXMLWordprocessingMLToHtmlConverter
 {
     internal class AllowedDiffInfo
     {

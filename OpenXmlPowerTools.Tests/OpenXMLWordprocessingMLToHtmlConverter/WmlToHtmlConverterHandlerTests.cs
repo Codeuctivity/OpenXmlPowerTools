@@ -8,7 +8,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Xunit;
 
-namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
+namespace OpenXmlPowerTools.Tests.OpenXMLWordprocessingMLToHtmlConverter
 {
     public class WmlToHtmlConverterHandlerTests
     {

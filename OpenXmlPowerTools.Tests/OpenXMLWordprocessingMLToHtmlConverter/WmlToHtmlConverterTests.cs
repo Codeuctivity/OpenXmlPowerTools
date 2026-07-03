@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Xunit;
 
-namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
+namespace OpenXmlPowerTools.Tests.OpenXMLWordprocessingMLToHtmlConverter
 {
     public class WmlToHtmlConverterTests
     {
@@ -117,7 +117,7 @@ namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
             var sourceDocx = new FileInfo(Path.Combine(sourceDir.FullName, name));
             var settings = new WmlToHtmlConverterSettings(sourceDocx.FullName, new ImageHandler(), new TextDummyHandler(), new SymbolHandler(), new BreakHandler(), new FontHandler(), false);
 
-            var byteArray = await File.ReadAllBytesAsync(sourceDocx.FullName);
+            var byteArray = await File.ReadAllBytesAsync(sourceDocx.FullName, TestContext.Current.CancellationToken);
             using var memoryStream = new MemoryStream();
             memoryStream.Write(byteArray, 0, byteArray.Length);
             using var wDoc = WordprocessingDocument.Open(memoryStream, true);
@@ -243,7 +243,7 @@ namespace Codeuctivity.Tests.OpenXMLWordProcessingMLToHtmlConverter
                     Assert.Fail($"Expected PixelErrorCount less or equal {allowedPixelErrorCount} but was {result.PixelErrorCount}\nExpected {expectFullPath}\ndiffers to actual {actualFullPath}\n Diff is {allowedDiffInfo.NewDiffImageFileName} \nReplace {actualFullPath} with the new value or store the diff as {allowedDiffInfo.ExistingDiffImageFilename.First()}.");
                 }
             }
-            catch (System.Exception ex) when (!(ex is Xunit.Sdk.FailException))
+            catch (System.Exception ex) when (ex is not Xunit.Sdk.FailException)
             {
                 SaveToGithubActionsPickupTestresultsDirectory(actualFullPath, expectFullPath, allowedDiffInfo.NewDiffImageFileName);
             }

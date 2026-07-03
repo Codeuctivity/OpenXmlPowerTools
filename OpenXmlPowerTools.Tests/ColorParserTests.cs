@@ -2,7 +2,7 @@ using Codeuctivity.OpenXmlPowerTools;
 using SkiaSharp;
 using Xunit;
 
-namespace Codeuctivity.Tests
+namespace OpenXmlPowerTools.Tests
 {
     public class ColorParserTests
     {

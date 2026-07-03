@@ -16,25 +16,21 @@ namespace SpreadsheetWriter01
             {
                 Worksheets = new WorksheetDfn[]
                 {
-                    new WorksheetDfn
-                    {
+                    new() {
                         Name = "MyFirstSheet",
                         TableName = "NamesAndRates",
                         ColumnHeadings = new CellDfn[]
                         {
-                            new CellDfn
-                            {
+                            new() {
                                 Value = "Name",
                                 Bold = true,
                             },
-                            new CellDfn
-                            {
+                            new() {
                                 Value = "Age",
                                 Bold = true,
                                 HorizontalCellAlignment = HorizontalCellAlignment.Left,
                             },
-                            new CellDfn
-                            {
+                            new() {
                                 Value = "Rate",
                                 Bold = true,
                                 HorizontalCellAlignment = HorizontalCellAlignment.Left,
@@ -42,38 +38,36 @@ namespace SpreadsheetWriter01
                         },
                         Rows = new RowDfn[]
                         {
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "Eric",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = 50,
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = (decimal)45.00,
                                         FormatCode = "0.00",
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "Bob",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = 42,
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = (decimal)78.00,
                                         FormatCode = "0.00",

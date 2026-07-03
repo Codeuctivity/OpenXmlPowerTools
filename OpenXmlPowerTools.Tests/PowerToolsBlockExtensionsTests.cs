@@ -6,7 +6,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Xunit;
 
-namespace Codeuctivity.Tests
+namespace OpenXmlPowerTools.Tests
 {
     public class PowerToolsBlockExtensionsTests : TestsBase
     {
@@ -52,7 +52,7 @@ namespace Codeuctivity.Tests
             // paragraph. This is caused by the GetXDocument method using the cached
             // XDocument, i.e., the annotation, rather reading the part's stream again.
             content = part.GetXDocument();
-            paragraphElements = content.Descendants(W.p).ToList();
+            paragraphElements = [.. content.Descendants(W.p)];
             Assert.Single(paragraphElements);
             Assert.Equal("First", paragraphElements[0].Value);
 
@@ -65,7 +65,7 @@ namespace Codeuctivity.Tests
             // Get content through the PowerTools in the exact same way as above.
             // We should now see both paragraphs.
             content = part.GetXDocument();
-            paragraphElements = content.Descendants(W.p).ToList();
+            paragraphElements = [.. content.Descendants(W.p)];
             Assert.Equal(2, paragraphElements.Count);
             Assert.Equal("First", paragraphElements[0].Value);
             Assert.Equal("Second", paragraphElements[1].Value);
@@ -114,7 +114,7 @@ namespace Codeuctivity.Tests
             // Get the part's content through the SDK. Having reloaded the root element,
             // we should still see both paragraphs.
             body = part.Document.Body;
-            paragraphs = body.Elements<Paragraph>().ToList();
+            paragraphs = [.. body.Elements<Paragraph>()];
             Assert.Equal(2, paragraphs.Count);
             Assert.Equal("Added through SDK", paragraphs[0].InnerText);
             Assert.Equal("Added through PowerTools", paragraphs[1].InnerText);

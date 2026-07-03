@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using Xunit;
 
-namespace Codeuctivity.Tests
+namespace OpenXmlPowerTools.Tests
 {
     public class FaTests
     {
@@ -49,7 +49,7 @@ namespace Codeuctivity.Tests
             var thisTestTempDir = new DirectoryInfo(Path.Combine(rootTempDir.FullName, testId));
             if (thisTestTempDir.Exists)
             {
-                Assert.True(false, "Duplicate test id: " + testId);
+                Assert.Fail("Duplicate test id: " + testId);
             }
             else
             {
@@ -100,12 +100,12 @@ namespace Codeuctivity.Tests
                     sb.Append(item.Description).Append(Environment.NewLine);
                 }
                 var s = sb.ToString();
-                Assert.True(false, s);
+                Assert.Fail(s);
             }
         }
 
-        private static readonly List<string> s_ExpectedErrors = new List<string>()
-        {
+        private static readonly List<string> s_ExpectedErrors =
+        [
             "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:evenHBand' attribute is not declared.",
             "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:evenVBand' attribute is not declared.",
             "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:firstColumn' attribute is not declared.",
@@ -135,6 +135,6 @@ namespace Codeuctivity.Tests
             "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:customStyles' attribute is not declared.",
             "The element has invalid child element 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:ins'.",
             "The element has invalid child element 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:del'.",
-        };
+        ];
     }
 }

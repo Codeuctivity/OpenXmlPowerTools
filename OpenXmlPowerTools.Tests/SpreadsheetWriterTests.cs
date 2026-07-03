@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using Xunit;
 
-namespace Codeuctivity.Tests
+namespace OpenXmlPowerTools.Tests
 {
     public class SwTests
     {
@@ -19,25 +19,21 @@ namespace Codeuctivity.Tests
             {
                 Worksheets = new WorksheetDfn[]
                 {
-                    new WorksheetDfn
-                    {
+                    new() {
                         Name = "MyFirstSheet",
                         TableName = "NamesAndRates",
                         ColumnHeadings = new CellDfn[]
                         {
-                            new CellDfn
-                            {
+                            new() {
                                 Value = "Name",
                                 Bold = true,
                             },
-                            new CellDfn
-                            {
+                            new() {
                                 Value = "Age",
                                 Bold = true,
                                 HorizontalCellAlignment = HorizontalCellAlignment.Left,
                             },
-                            new CellDfn
-                            {
+                            new() {
                                 Value = "Rate",
                                 Bold = true,
                                 HorizontalCellAlignment = HorizontalCellAlignment.Left,
@@ -45,38 +41,36 @@ namespace Codeuctivity.Tests
                         },
                         Rows = new RowDfn[]
                         {
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "Eric",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = 50,
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = (decimal)45.00,
                                         FormatCode = "0.00",
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "Bob",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = 42,
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = (decimal)78.00,
                                         FormatCode = "0.00",
@@ -100,18 +94,15 @@ namespace Codeuctivity.Tests
             {
                 Worksheets = new WorksheetDfn[]
                 {
-                    new WorksheetDfn
-                    {
+                    new() {
                         Name = "MyFirstSheet",
                         ColumnHeadings = new CellDfn[]
                         {
-                            new CellDfn
-                            {
+                            new() {
                                 Value = "DataType",
                                 Bold = true,
                             },
-                            new CellDfn
-                            {
+                            new() {
                                 Value = "Value",
                                 Bold = true,
                                 HorizontalCellAlignment = HorizontalCellAlignment.Right,
@@ -119,185 +110,172 @@ namespace Codeuctivity.Tests
                         },
                         Rows = new RowDfn[]
                         {
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "Boolean",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Boolean,
                                         Value = true,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "Boolean",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Boolean,
                                         Value = false,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "String",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "A String",
                                         HorizontalCellAlignment = HorizontalCellAlignment.Right,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "int",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = 100,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "int?",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = 100,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "int? (is null)",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = null,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "uint",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = 101,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "long",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = long.MaxValue,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "float",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = (float)123.45,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "double",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = 123.45,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "decimal",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Number,
                                         Value = (decimal)123.45,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "date (t:str)",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         Value = new DateTime(2012, 1, 8).ToOADate(),
                                         FormatCode= "mm-dd-yy",
                                         Bold = true,
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "date (t:str)",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         Value = new DateTime(2012, 1, 9).ToOADate(),
                                         FormatCode= "mm-dd-yy",
                                         Bold = true,
@@ -305,15 +283,14 @@ namespace Codeuctivity.Tests
                                     },
                                 }
                             },
-                            new RowDfn
-                            {
+                            new() {
                                 Cells = new CellDfn[]
                                 {
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.String,
                                         Value = "date (t:d)",
                                     },
-                                    new CellDfn {
+                                    new() {
                                         CellDataType = CellDataType.Date,
                                         Value = new DateTime(2012, 1, 11).ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff"),
                                     },
@@ -350,9 +327,9 @@ namespace Codeuctivity.Tests
             Assert.Empty(errors);
         }
 
-        private static readonly List<string> s_ExpectedErrors = new List<string>()
-        {
+        private static readonly List<string> s_ExpectedErrors =
+        [
             "The attribute 't' has invalid value 'd'. The Enumeration constraint failed.",
-        };
+        ];
     }
 }
