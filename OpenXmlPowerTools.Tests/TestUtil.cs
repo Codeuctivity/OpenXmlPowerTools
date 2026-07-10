@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Codeuctivity.Tests
+namespace OpenXmlPowerTools.Tests
 {
     public class TestUtil
     {

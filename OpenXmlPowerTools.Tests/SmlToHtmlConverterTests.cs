@@ -3,7 +3,7 @@ using DocumentFormat.OpenXml.Packaging;
 using System.IO;
 using Xunit;
 
-namespace Codeuctivity.Tests
+namespace OpenXmlPowerTools.Tests
 {
     public class ShTests
     {

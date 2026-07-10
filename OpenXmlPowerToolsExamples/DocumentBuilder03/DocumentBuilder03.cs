@@ -43,10 +43,10 @@ internal class Program
         var outFileName = Path.Combine(tempDi.FullName, "Out.docx");
         var sources = new List<Source>()
             {
-                new Source(doc1, true),
-                new Source(new WmlDocument(@"..\..\Insert-01.docx"), "Liz"),
-                new Source(new WmlDocument(@"..\..\Insert-02.docx"), "Eric"),
-                new Source(new WmlDocument(@"..\..\FrontMatter.docx"), "Front"),
+                new(doc1, true),
+                new(new WmlDocument(@"..\..\Insert-01.docx"), "Liz"),
+                new(new WmlDocument(@"..\..\Insert-02.docx"), "Eric"),
+                new(new WmlDocument(@"..\..\FrontMatter.docx"), "Front"),
             };
         DocumentBuilder.BuildDocument(sources, outFileName);
     }

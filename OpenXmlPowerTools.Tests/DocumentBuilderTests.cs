@@ -10,7 +10,7 @@ using System.Text;
 using System.Xml.Linq;
 using Xunit;
 
-namespace Codeuctivity.Tests
+namespace OpenXmlPowerTools.Tests
 {
     public class DbTests
     {
@@ -22,7 +22,7 @@ namespace Codeuctivity.Tests
             var sourceDocx = new FileInfo(Path.Combine(sourceDir.FullName, name));
             var sources = new List<Source>()
             {
-                new Source(new WmlDocument(sourceDocx.FullName), true),
+                new(new WmlDocument(sourceDocx.FullName), true),
             };
             var processedDestDocx = new FileInfo(Path.Combine(TestUtil.TempDir.FullName, sourceDocx.Name.Replace(".docx", "-processed-by-DocumentBuilder.docx")));
             DocumentBuilder.BuildDocument(sources, processedDestDocx.FullName);
@@ -36,9 +36,9 @@ namespace Codeuctivity.Tests
             var source2Docx = new FileInfo(Path.Combine(sourceDir.FullName, "DB002-Landscape-Section.docx"));
             var sources = new List<Source>()
             {
-                new Source(new WmlDocument(source1Docx.FullName)) { KeepSections = true },
-                new Source(new WmlDocument(source2Docx.FullName)) { KeepSections = true, DiscardHeadersAndFootersInKeptSections = true },
-                new Source(new WmlDocument(source1Docx.FullName)) { KeepSections = true },
+                new(new WmlDocument(source1Docx.FullName)) { KeepSections = true },
+                new(new WmlDocument(source2Docx.FullName)) { KeepSections = true, DiscardHeadersAndFootersInKeptSections = true },
+                new(new WmlDocument(source1Docx.FullName)) { KeepSections = true },
             };
             var processedDestDocx = new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB002-Keep-Sections-Discard-Headers-And-Footers.docx"));
             DocumentBuilder.BuildDocument(sources, processedDestDocx.FullName);
@@ -52,9 +52,9 @@ namespace Codeuctivity.Tests
             var source2Docx = new FileInfo(Path.Combine(sourceDir.FullName, "DB002-Landscape-Section.docx"));
             var sources = new List<Source>()
             {
-                new Source(new WmlDocument(source1Docx.FullName)) { KeepSections = true },
-                new Source(new WmlDocument(source2Docx.FullName)) { KeepSections = true, DiscardHeadersAndFootersInKeptSections = true },
-                new Source(new WmlDocument(source1Docx.FullName)) { KeepSections = true },
+                new(new WmlDocument(source1Docx.FullName)) { KeepSections = true },
+                new(new WmlDocument(source2Docx.FullName)) { KeepSections = true, DiscardHeadersAndFootersInKeptSections = true },
+                new(new WmlDocument(source1Docx.FullName)) { KeepSections = true },
             };
             var processedDestDocx = new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB003-Only-Default-Header.docx"));
             DocumentBuilder.BuildDocument(sources, processedDestDocx.FullName);
@@ -68,9 +68,9 @@ namespace Codeuctivity.Tests
             var source2Docx = new FileInfo(Path.Combine(sourceDir.FullName, "DB002-Landscape-Section.docx"));
             var sources = new List<Source>()
             {
-                new Source(new WmlDocument(source1Docx.FullName)) { KeepSections = true },
-                new Source(new WmlDocument(source2Docx.FullName)) { KeepSections = true, DiscardHeadersAndFootersInKeptSections = true },
-                new Source(new WmlDocument(source1Docx.FullName)) { KeepSections = true },
+                new(new WmlDocument(source1Docx.FullName)) { KeepSections = true },
+                new(new WmlDocument(source2Docx.FullName)) { KeepSections = true, DiscardHeadersAndFootersInKeptSections = true },
+                new(new WmlDocument(source1Docx.FullName)) { KeepSections = true },
             };
             var processedDestDocx = new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB003-Only-Default-Header.docx"));
             DocumentBuilder.BuildDocument(sources, processedDestDocx.FullName);
@@ -84,9 +84,9 @@ namespace Codeuctivity.Tests
             var source2Docx = new FileInfo(Path.Combine(sourceDir.FullName, "DB002-Landscape-Section.docx"));
             var sources = new List<Source>()
             {
-                new Source(new WmlDocument(source1Docx.FullName)) { KeepSections = true },
-                new Source(new WmlDocument(source2Docx.FullName)) { KeepSections = true, DiscardHeadersAndFootersInKeptSections = true },
-                new Source(new WmlDocument(source1Docx.FullName)) { KeepSections = true },
+                new(new WmlDocument(source1Docx.FullName)) { KeepSections = true },
+                new(new WmlDocument(source2Docx.FullName)) { KeepSections = true, DiscardHeadersAndFootersInKeptSections = true },
+                new(new WmlDocument(source1Docx.FullName)) { KeepSections = true },
             };
             var processedDestDocx = new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB005.docx"));
             DocumentBuilder.BuildDocument(sources, processedDestDocx.FullName);
@@ -103,7 +103,7 @@ namespace Codeuctivity.Tests
             // Create new document from 10 paragraphs starting at paragraph 5 of Source1.docx
             var sources = new List<Source>()
             {
-                new Source(new WmlDocument(source1.FullName), 5, 10, true),
+                new(new WmlDocument(source1.FullName), 5, 10, true),
             };
             var out1 = new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB006-Out1.docx"));
             DocumentBuilder.BuildDocument(sources, out1.FullName);
@@ -111,33 +111,33 @@ namespace Codeuctivity.Tests
 
             // Create new document from paragraph 1, and paragraphs 5 through end of Source3.docx.
             // This effectively 'deletes' paragraphs 2-4
-            sources = new List<Source>()
-            {
+            sources =
+            [
                 new Source(new WmlDocument(source3.FullName), 0, 1, false),
                 new Source(new WmlDocument(source3.FullName), 4, false),
-            };
+            ];
             var out2 = new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB006-Out2.docx"));
             DocumentBuilder.BuildDocument(sources, out2.FullName);
             Validate(out2);
 
             // Create a new document that consists of the entirety of Source1.docx and Source2.docx.  Use
             // the section information (headings and footers) from source1.
-            sources = new List<Source>()
-            {
+            sources =
+            [
                 new Source(new WmlDocument(source1.FullName), true),
                 new Source(new WmlDocument(source2.FullName), false),
-            };
+            ];
             var out3 = new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB006-Out3.docx"));
             DocumentBuilder.BuildDocument(sources, out3.FullName);
             Validate(out3);
 
             // Create a new document that consists of the entirety of Source1.docx and Source2.docx.  Use
             // the section information (headings and footers) from source2.
-            sources = new List<Source>()
-            {
+            sources =
+            [
                 new Source(new WmlDocument(source1.FullName), false),
                 new Source(new WmlDocument(source2.FullName), true),
-            };
+            ];
             var out4 = new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB006-Out4.docx"));
             DocumentBuilder.BuildDocument(sources, out4.FullName);
             Validate(out4);
@@ -145,11 +145,11 @@ namespace Codeuctivity.Tests
             // Create a new document that consists of the first 5 paragraphs of Source1.docx and the first
             // five paragraphs of Source2.docx.  This example returns a new WmlDocument, when you then can
             // serialize to a SharePoint document library, or use in some other interesting scenario.
-            sources = new List<Source>()
-            {
+            sources =
+            [
                 new Source(new WmlDocument(source1.FullName), 0, 5, false),
                 new Source(new WmlDocument(source2.FullName), 0, 5, true),
-            };
+            ];
             var wmlOut5 = DocumentBuilder.BuildDocument(sources);
             var out5 = new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB006-Out5.docx"));
 
@@ -167,10 +167,10 @@ namespace Codeuctivity.Tests
             var authorBio = new FileInfo(Path.Combine(sourceDir.FullName, "DB007-AuthorBiography.docx"));
             var sources = new List<Source>()
             {
-                new Source(new WmlDocument(whitePaper.FullName), 0, 1, true),
-                new Source(new WmlDocument(paperAbstract.FullName), false),
-                new Source(new WmlDocument(authorBio.FullName), false),
-                new Source(new WmlDocument(whitePaper.FullName), 1, false),
+                new(new WmlDocument(whitePaper.FullName), 0, 1, true),
+                new(new WmlDocument(paperAbstract.FullName), false),
+                new(new WmlDocument(authorBio.FullName), false),
+                new(new WmlDocument(whitePaper.FullName), 1, false),
             };
             var assembledPaper = new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB007-AssembledPaper.docx"));
             DocumentBuilder.BuildDocument(sources, assembledPaper.FullName);
@@ -187,7 +187,7 @@ namespace Codeuctivity.Tests
             // Delete all paragraphs with a specific style.
             using (var doc = WordprocessingDocument.Open(notes.FullName, false))
             {
-                sources = doc
+                sources = [.. doc
                     .MainDocumentPart
                     .GetXDocument()
                     .Root
@@ -206,8 +206,7 @@ namespace Codeuctivity.Tests
                     .Where(g => g.Key == true)
                     .Select(g => new Source(
                         new WmlDocument(notes.FullName), g.First().Index,
-                            g.Last().Index - g.First().Index + 1, true))
-                    .ToList();
+                            g.Last().Index - g.First().Index + 1, true))];
             }
             var newNotes = new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB008-NewNotes.docx"));
             DocumentBuilder.BuildDocument(sources, newNotes.FullName);
@@ -247,7 +246,7 @@ namespace Codeuctivity.Tests
             var thisTestTempDir = new DirectoryInfo(Path.Combine(rootTempDir.FullName, testId));
             if (thisTestTempDir.Exists)
             {
-                Assert.True(false, "Duplicate test id: " + testId);
+                Assert.Fail("Duplicate test id: " + testId);
             }
             else
             {
@@ -296,8 +295,8 @@ namespace Codeuctivity.Tests
 
             var sources = new List<Source>()
             {
-                new Source(wmlDestDocument),
-                new Source(wmlSourceDocument, insertId),
+                new(wmlDestDocument),
+                new(wmlSourceDocument, insertId),
             };
 
             var outFi = new FileInfo(Path.Combine(tempDirFullName, "Output.docx"));
@@ -349,22 +348,21 @@ namespace Codeuctivity.Tests
                     pi.Index,
                     SectionIndex = sc,
                 });
-                documentList = zipped
+                documentList = [.. zipped
                     .GroupAdjacent(p => p.SectionIndex)
                     .Select(g => new DocumentInfo
                     {
                         DocumentNumber = g.Key,
                         Start = g.First().Index,
                         Count = g.Last().Index - g.First().Index + 1,
-                    })
-                    .ToList();
+                    })];
             }
             foreach (var doc in documentList)
             {
                 var fileName = string.Format("DB009-Section{0:000}.docx", doc.DocumentNumber);
                 var fiSection = new FileInfo(Path.Combine(TestUtil.TempDir.FullName, fileName));
                 var documentSource = new List<Source> {
-                    new Source(new WmlDocument(spec.FullName), doc.Start, doc.Count, true)
+                    new(new WmlDocument(spec.FullName), doc.Start, doc.Count, true)
                 };
                 DocumentBuilder.BuildDocument(documentSource, fiSection.FullName);
                 Validate(fiSection);
@@ -422,10 +420,10 @@ namespace Codeuctivity.Tests
 
             var sources = new List<Source>()
             {
-                new Source(doc1, true),
-                new Source(new WmlDocument(insert01.FullName), "Liz"),
-                new Source(new WmlDocument(insert02.FullName), "Eric"),
-                new Source(new WmlDocument(front.FullName), "Front"),
+                new(doc1, true),
+                new(new WmlDocument(insert01.FullName), "Liz"),
+                new(new WmlDocument(insert02.FullName), "Eric"),
+                new(new WmlDocument(front.FullName), "Front"),
             };
             var out1 = new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB010-Inserted.docx"));
             DocumentBuilder.BuildDocument(sources, out1.FullName);
@@ -441,8 +439,8 @@ namespace Codeuctivity.Tests
             var source2 = new FileInfo(Path.Combine(sourceDir.FullName, "DB011-Body-With-Shape.docx"));
             var sources = new List<Source>()
             {
-                new Source(new WmlDocument(source1.FullName)),
-                new Source(new WmlDocument(source2.FullName)),
+                new(new WmlDocument(source1.FullName)),
+                new(new WmlDocument(source2.FullName)),
             };
             var processedDestDocx =
                 new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB011-Body-And-Header-With-Shapes.docx"));
@@ -461,7 +459,7 @@ namespace Codeuctivity.Tests
             var sourceDocx = new FileInfo(Path.Combine(sourceDir.FullName, name));
             var sources = new List<Source>()
             {
-                new Source(new WmlDocument(sourceDocx.FullName)),
+                new(new WmlDocument(sourceDocx.FullName)),
             };
             var processedDestDocx = new FileInfo(Path.Combine(TestUtil.TempDir.FullName,
                 sourceDocx.Name.Replace(".docx", "-processed-by-DocumentBuilder.docx")));
@@ -481,7 +479,7 @@ namespace Codeuctivity.Tests
             var sourceDocx = new FileInfo(Path.Combine(sourceDir.FullName, name));
             var sources = new List<Source>()
             {
-                new Source(new WmlDocument(sourceDocx.FullName)),
+                new(new WmlDocument(sourceDocx.FullName)),
             };
             var processedDestDocx = new FileInfo(Path.Combine(TestUtil.TempDir.FullName,
                 sourceDocx.Name.Replace(".docx", "-processed-by-DocumentBuilder.docx")));
@@ -513,8 +511,8 @@ namespace Codeuctivity.Tests
 
             var sources = new List<Source>()
             {
-                new Source(doc1, true),
-                new Source(new WmlDocument(source1.FullName), "Front"),
+                new(doc1, true),
+                new(new WmlDocument(source1.FullName), "Front"),
             };
             var processedDestDocx =
                 new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB012b-NumberingWithZeroIdWorks.docx"));
@@ -534,11 +532,11 @@ namespace Codeuctivity.Tests
                 "DB013a-Green-Heading1-Danish.docx"));
             List<Source> sources = null;
 
-            sources = new List<Source>()
-            {
+            sources =
+            [
                 new Source(new WmlDocument(source1.FullName)),
                 new Source(new WmlDocument(source2.FullName)),
-            };
+            ];
             var processedDestDocx =
                 new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB013a-Colored-Heading1.docx"));
             DocumentBuilder.BuildDocument(sources, processedDestDocx.FullName);
@@ -566,11 +564,11 @@ namespace Codeuctivity.Tests
                 "DB013b-Blue-List-English.docx"));
             List<Source> sources = null;
 
-            sources = new List<Source>()
-            {
+            sources =
+            [
                 new Source(new WmlDocument(source1.FullName)),
                 new Source(new WmlDocument(source2.FullName)),
-            };
+            ];
             var processedDestDocx =
                 new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB013b-Colored-List.docx"));
             DocumentBuilder.BuildDocument(sources, processedDestDocx.FullName);
@@ -593,7 +591,7 @@ namespace Codeuctivity.Tests
             var source = new FileInfo(Path.Combine(sourceDir.FullName, "DB014-WebExtensions.docx"));
             var sources = new List<Source>()
             {
-                new Source(new WmlDocument(source.FullName)),
+                new(new WmlDocument(source.FullName)),
             };
             var processedDestDocx = new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB014-WebExtensions.docx"));
             DocumentBuilder.BuildDocument(sources, processedDestDocx.FullName);
@@ -612,7 +610,7 @@ namespace Codeuctivity.Tests
             var source = new FileInfo(Path.Combine(sourceDir.FullName, "DB015-LatentStyles.docx"));
             var sources = new List<Source>()
             {
-                new Source(new WmlDocument(source.FullName)),
+                new(new WmlDocument(source.FullName)),
             };
             var processedDestDocx = new FileInfo(Path.Combine(TestUtil.TempDir.FullName, "DB015-LatentStyles.docx"));
             DocumentBuilder.BuildDocument(sources, processedDestDocx.FullName);
@@ -634,7 +632,7 @@ namespace Codeuctivity.Tests
             var sourceDocx = new FileInfo(Path.Combine(sourceDir.FullName, name));
             var sources = new List<Source>()
             {
-                new Source(new WmlDocument(sourceDocx.FullName), true),
+                new(new WmlDocument(sourceDocx.FullName), true),
             };
             var processedDestDocx = new FileInfo(Path.Combine(TestUtil.TempDir.FullName,
                 sourceDocx.Name.Replace(".docx", "-processed-by-DocumentBuilder.docx")));
@@ -654,8 +652,8 @@ namespace Codeuctivity.Tests
 
             var sources = new List<Source>()
             {
-                new Source(new WmlDocument(source1.FullName)){KeepSections = true},
-                new Source(new WmlDocument(source2.FullName)){KeepSections = true, DiscardHeadersAndFootersInKeptSections = true},
+                new(new WmlDocument(source1.FullName)){KeepSections = true},
+                new(new WmlDocument(source2.FullName)){KeepSections = true, DiscardHeadersAndFootersInKeptSections = true},
             };
 
             var processedDestDocx = new FileInfo(Path.Combine(Path.Combine(TestUtil.TempDir.FullName), "DB017-ApplyHeaderAndFooterToAllDocs.docx"));
@@ -714,7 +712,7 @@ namespace Codeuctivity.Tests
             var thisTestTempDir = new DirectoryInfo(Path.Combine(rootTempDir.FullName, testId));
             if (thisTestTempDir.Exists)
             {
-                Assert.True(false, "Duplicate test id: " + testId);
+                Assert.Fail("Duplicate test id: " + testId);
             }
             else
             {
@@ -769,12 +767,12 @@ namespace Codeuctivity.Tests
                     sb.Append(item.Description).Append(Environment.NewLine);
                 }
                 var s = sb.ToString();
-                Assert.True(false, s);
+                Assert.Fail(s);
             }
         }
 
-        private static readonly List<string> s_ExpectedErrors = new List<string>()
-        {
+        private static readonly List<string> s_ExpectedErrors =
+        [
             "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:evenHBand' attribute is not declared.",
             "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:evenVBand' attribute is not declared.",
             "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:firstColumn' attribute is not declared.",
@@ -802,7 +800,7 @@ namespace Codeuctivity.Tests
             "http://schemas.microsoft.com/office/word/2008/9/12/wordml:",
             "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:allStyles' attribute is not declared.",
             "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:customStyles' attribute is not declared.",
-        };
+        ];
 
         private void ValidateUniqueDocPrIds(FileInfo fi)
         {

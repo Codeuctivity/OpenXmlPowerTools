@@ -3,7 +3,7 @@ using System.IO;
 using System.Xml.Linq;
 using Xunit;
 
-namespace Codeuctivity.Tests
+namespace OpenXmlPowerTools.Tests
 {
     public class MgTests
     {

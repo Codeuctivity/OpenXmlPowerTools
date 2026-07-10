@@ -25,7 +25,7 @@ using Xunit;
  * this module do not require the HtmlAgilityPack to run.
 *******************************************************************************************/
 
-namespace Codeuctivity.Tests
+namespace OpenXmlPowerTools.Tests
 {
     public class HwTests
     {

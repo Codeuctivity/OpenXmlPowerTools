@@ -30,13 +30,13 @@ internal class DocumentBuilderExample02
         // Insert an abstract and author biography into a white paper.
         List<Source> sources = null;
 
-        sources = new List<Source>()
-        {
+        sources =
+        [
             new Source(new WmlDocument("../../WhitePaper.docx"), 0, 1, true),
             new Source(new WmlDocument("../../Abstract.docx"), false),
             new Source(new WmlDocument("../../AuthorBiography.docx"), false),
             new Source(new WmlDocument("../../WhitePaper.docx"), 1, false),
-        };
+        ];
         DocumentBuilder.BuildDocument(sources, Path.Combine(tempDi.FullName, "AssembledPaper.docx"));
 
         // Delete all paragraphs with a specific style.
@@ -114,7 +114,7 @@ internal class DocumentBuilderExample02
         {
             var fileName = string.Format("Section{0:000}.docx", doc.DocumentNumber);
             var documentSource = new List<Source> {
-                new Source(new WmlDocument("../../Spec.docx"), doc.Start, doc.Count, true)
+                new(new WmlDocument("../../Spec.docx"), doc.Start, doc.Count, true)
             };
             DocumentBuilder.BuildDocument(documentSource, Path.Combine(tempDi.FullName, fileName));
         }
