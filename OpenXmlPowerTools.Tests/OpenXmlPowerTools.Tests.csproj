@@ -8,12 +8,12 @@
     <PackageReference Include="Codeuctivity.HtmlRenderer" Version="4.0.529" />
     <PackageReference Include="Codeuctivity.SkiaSharpCompare" Version="4.0.311" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
-    <PackageReference Include="xunit.analyzers" Version="1.27.0"/>
+    <PackageReference Include="xunit.analyzers" Version="2.0.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="xunit.v3" Version="4.0.0" />
   </ItemGroup>
 
   <ItemGroup>
