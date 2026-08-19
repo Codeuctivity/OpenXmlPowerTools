@@ -28,7 +28,7 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore
       - name: Test
-        run: dotnet test --no-build --verbosity normal --configuration Release --logger "trx;LogFileName=${{ runner.workspace }}/OpenXmlPowerTools/TestResult/test_results.trx"
+        run: dotnet test OpenXmlPowerTools.Tests/OpenXmlPowerTools.Tests.csproj --no-restore --verbosity normal --configuration Release --results-directory TestResult --report-xunit-trx --report-xunit-trx-filename test_results.trx
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
         if: matrix.os == 'ubuntu-latest'
