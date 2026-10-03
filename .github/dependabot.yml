@@ -27,6 +27,22 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    # SkiaSharp and its native assets must always have the same version - separate PRs each fail
+    # the build until the other one is merged, so update them together in one PR. SkiaSharpCompare
+    # (test dependency) is built against a specific SkiaSharp version and joins the same PR.
+    groups:
+      skiasharp:
+        patterns:
+          - "SkiaSharp"
+          - "SkiaSharp.*"
+          - "Codeuctivity.SkiaSharpCompare"
+    # Wait a few days before picking up a new SkiaSharp, so SkiaSharpCompare has time to publish a
+    # release built against it and both land in the same grouped PR.
+    cooldown:
+      default-days: 3
+      include:
+        - "SkiaSharp"
+        - "SkiaSharp.*"
     ignore:
       - dependency-name: "SixLabors.ImageSharp"
         versions: ["3.x", "4.x"]
