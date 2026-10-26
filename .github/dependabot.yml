@@ -36,11 +36,6 @@ updates:
           - "SkiaSharp"
           - "SkiaSharp.*"
           - "Codeuctivity.SkiaSharpCompare"
-      # xunit.v3 pins a minimum xunit.analyzers (and runner) version transitively. Updating them in
-      # separate PRs causes NU1605 package downgrade errors, so update the whole xunit family together.
-      xunit:
-        patterns:
-          - "xunit*"
     # Wait a few days before picking up a new SkiaSharp, so SkiaSharpCompare has time to publish a
     # release built against it and both land in the same grouped PR.
     cooldown:
