@@ -155,10 +155,10 @@ namespace Codeuctivity.OpenXmlPowerTools
         {
             if (string.IsNullOrEmpty(text))
                 return string.Empty;
-            // Trim leading & trailing whitespace when NOT preserving
+            // Word trims XML whitespace at text boundaries, not Unicode spaces such as NBSP.
             ReadOnlySpan<char> span = preserve
                 ? text.AsSpan()
-                : text.AsSpan().Trim();
+                : text.AsSpan().Trim(" \t\r\n");
             if (span.Length == 0)
                 return string.Empty;
             var sb = new System.Text.StringBuilder(span.Length);

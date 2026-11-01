@@ -405,5 +405,26 @@ namespace OpenXmlPowerTools.Tests
             }
         }
 
+        [Theory]
+        [InlineData(null)]
+        [InlineData("default")]
+        [InlineData("preserve")]
+        public void CanReplaceSplitMatchesWithNonBreakingSpaces(string space)
+        {
+            XElement Text(string value) => new XElement(W.t,
+                space == null ? null : new XAttribute(XNamespace.Xml + "space", space), value);
+
+            var paragraph = new XElement(W.p,
+                new XElement(W.r, Text("Prefix\u00A0{[if")),
+                new XElement(W.r, Text("\u00A0Ready]}\u00A0Middle\u00A0{[if")),
+                new XElement(W.r, Text("\u00A0Ready]}\u00A0Suffix")));
+            var count = OpenXmlRegex.Replace(new[] { paragraph },
+                new Regex(Regex.Escape("{[if\u00A0Ready]}")), "Selected", null);
+
+            Assert.Equal(2, count);
+            Assert.Equal("Prefix\u00A0Selected\u00A0Middle\u00A0Selected\u00A0Suffix",
+                string.Concat(paragraph.Descendants(W.t).Select(t => t.Value)));
+        }
+
     }
 }

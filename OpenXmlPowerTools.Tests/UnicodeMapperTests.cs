@@ -69,6 +69,20 @@ namespace OpenXmlPowerTools.Tests
             Assert.Equal("Third", mixedRuns.Elements(W.t).Skip(2).First().Value);
         }
 
+        [Theory]
+        [InlineData("\u00A0")]
+        [InlineData("\u00A0text")]
+        [InlineData("text\u00A0")]
+        [InlineData("\u00A0text\u00A0")]
+        public void CanRoundTripNonBreakingSpaces(string text)
+        {
+            var runs = UnicodeMapper.StringToCoalescedRunList(text, null);
+
+            // NBSP is content; the mapper's own writer does not require xml:space for it.
+            Assert.All(runs.Elements(W.t), t => Assert.Null(t.Attribute(XNamespace.Xml + "space")));
+            Assert.Equal(text, runs.Select(UnicodeMapper.RunToString).StringConcatenate());
+        }
+
         [Fact]
         public void CanMapSymbols()
         {
@@ -201,25 +215,32 @@ Line 2!
         // into a canonical form when displaying or saving the document. These tests
         // compare RunToString’s output against Word’s canonicalized output to ensure
         // that whitespace is treated as semantic content in the same way Word treats it.
-        [Fact]
-        public void TreatsXmlSpaceLikeWord()
+        [Theory]
+        [InlineData("UM-Whitespace", 107)]
+        [InlineData("UM-Whitespace-Unicode", 43)]
+        public void TreatsXmlSpaceLikeWord(string fixture, int caseCount)
         {
             var sourceDir = new System.IO.DirectoryInfo("../../../../TestFiles/");
             // Test document: crafted to include many whitespace patterns that Word accepts as valid input
-            var testDoc = new System.IO.FileInfo(System.IO.Path.Combine(sourceDir.FullName, "UM-Whitespace-test.docx"));
+            var testDoc = new System.IO.FileInfo(System.IO.Path.Combine(sourceDir.FullName, fixture + "-test.docx"));
             var testWmlDoc = new WmlDocument(testDoc.FullName);
             var testParagraphs = testWmlDoc.MainDocumentPart
                             .Element(W.body)
                             .Elements(W.p).ToList();
             // Canonical document: the same test document after being opened and saved by Word,
             // representing Word's own normalized interpretation of that whitespace
-            var expectedDoc = new System.IO.FileInfo(System.IO.Path.Combine(sourceDir.FullName, "UM-Whitespace-Word-saved.docx"));
+            var expectedDoc = new System.IO.FileInfo(System.IO.Path.Combine(sourceDir.FullName, fixture + "-Word-saved.docx"));
             var expectedWmlDoc = new WmlDocument(expectedDoc.FullName);
             var expectedParagraphs = expectedWmlDoc.MainDocumentPart
                             .Element(W.body)
                             .Elements(W.p).ToList();
+            // Each fixture ends with one blank paragraph after its name/content pairs.
+            Assert.Equal(caseCount * 2 + 1, testParagraphs.Count);
+            Assert.Equal(testParagraphs.Count, expectedParagraphs.Count);
+            Assert.Empty(testParagraphs.Last().Descendants(W.t));
+            Assert.Empty(expectedParagraphs.Last().Descendants(W.t));
             // Iterate through pairs of paragraphs (test name, test content, expected result)
-            for (int i = 0; i < testParagraphs.Count - 1; i += 2)
+            for (int i = 0; i < caseCount * 2; i += 2)
             {
                 var testNameParagraph = testParagraphs[i];
                 var testContentParagraph = testParagraphs[i + 1];
@@ -227,6 +248,7 @@ Line 2!
                 var testName = testNameParagraph.Descendants(W.t)
                     .Select(t => (string)t)
                     .StringConcatenate();
+                Assert.Equal(testName, ExtractExpectedFromWord(expectedParagraphs[i]));
                 // Get the actual result by calling UnicodeMapper.RunToString on the test content runs
                 var actualResult = testContentParagraph.Descendants(W.r)
                     .Select(UnicodeMapper.RunToString)
@@ -242,7 +264,7 @@ Line 2!
 
         // Extracts the expected text from Word’s canonicalized output for the whitespace tests.
         // This helper intentionally handles *only* the constructs that Word emits in the saved
-        // version of UM-whitespace-test.docx:
+        // versions of the UM-Whitespace fixtures:
         //   • <w:t>      → literal text
         //   • <w:tab/>   → '\t'
         //   • <w:lastRenderedPageBreak/> (intentionally ignored)
