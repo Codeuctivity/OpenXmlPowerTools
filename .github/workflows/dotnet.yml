@@ -47,18 +47,23 @@ jobs:
     if: github.ref == 'refs/heads/release'
     runs-on: ubuntu-latest
     needs: build
+    permissions:
+      contents: write # gh release create
+      id-token: write # NuGet Trusted Publishing (OIDC)
     steps:
       - uses: actions/checkout@v7
       - name: Download build artifacts
         uses: actions/download-artifact@v8
         with:
           name: build-artifacts
+      - name: NuGet login (Trusted Publishing)
+        uses: NuGet/login@v1
+        id: nugetLogin
+        with:
+          user: ${{ secrets.NUGET_USER }}
       - name: NugetPush
-        env:
-          NUGET_TOKEN_EXISTS: ${{ secrets.NUGET_TOKEN }}
-        if: env.NUGET_TOKEN_EXISTS != ''
         run: |
-          dotnet nuget push *.nupkg --skip-duplicate --api-key ${{secrets.NUGET_TOKEN}} --source https://api.nuget.org/v3/index.json
+          dotnet nuget push *.nupkg --skip-duplicate --api-key ${{ steps.nugetLogin.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
       - name: Github Release
         shell: bash
         env:
