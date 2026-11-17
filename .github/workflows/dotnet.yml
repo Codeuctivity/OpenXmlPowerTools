@@ -6,98 +6,102 @@ env:
 on:
   push:
     paths-ignore:
-      - '*.md'
+      - '**.md'
 
 jobs:
   build:
-    if: |
-      github.event_name == 'push' 
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: actions/checkout@v7
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: |
-            10.0.x
-      - name: Restore dependencies
-        run: dotnet restore
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
-      - name: Test
-        run: dotnet test OpenXmlPowerTools.Tests/OpenXmlPowerTools.Tests.csproj --no-restore --verbosity normal --configuration Release --results-directory TestResult --report-xunit-trx --report-xunit-trx-filename test_results.trx
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v7
-        if: matrix.os == 'ubuntu-latest'
-        with:
-          name: build-artifacts
-          path: |
-            OpenXmlPowerTools/bin/Release/
-      - name: Publish Unit Test Results
-        uses: actions/upload-artifact@v7
-        if: failure()
-        with:
-          name: TestResult
-          path: "TestResult/**/*"
+    - uses: actions/checkout@v7
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v6
+      with:
+        dotnet-version: |
+          10.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    - name: Test
+      run: dotnet test OpenXmlPowerTools.Tests/OpenXmlPowerTools.Tests.csproj --no-build --verbosity normal --configuration Release --results-directory TestResult --report-xunit-trx --report-xunit-trx-filename test_results.trx
+
+    - name: Publish Unit Test Results
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: TestResult-${{ matrix.os }}
+        path: TestResult/**/*
+        retention-days: 7
+
+    - name: Upload NuGet package
+      if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v7
+      with:
+        name: nuget-package
+        path: ./OpenXmlPowerTools/bin/Release/*.*nupkg
+        if-no-files-found: error
+        retention-days: 7
 
   deployRelease:
-    if: github.ref == 'refs/heads/release'
-    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/release')
     needs: build
+    runs-on: ubuntu-latest
     permissions:
       contents: write # gh release create
       id-token: write # NuGet Trusted Publishing (OIDC)
     steps:
-      - uses: actions/checkout@v7
-      - name: Download build artifacts
-        uses: actions/download-artifact@v8
-        with:
-          name: build-artifacts
-      - name: NuGet login (Trusted Publishing)
-        uses: NuGet/login@v1
-        id: nugetLogin
-        with:
-          user: ${{ secrets.NUGET_USER }}
-      - name: NugetPush
-        run: |
-          dotnet nuget push *.nupkg --skip-duplicate --api-key ${{ steps.nugetLogin.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
-      - name: Github Release
-        shell: bash
-        env:
-          GITHUB_TOKEN: ${{ github.TOKEN }}
-        if: env.GITHUB_TOKEN != ''
-        run: |
-          gh release create ${{env.CURRENT_VERSION}} *.*nupkg --generate-notes
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v6
+      with:
+        dotnet-version: |
+          10.0.x
+    - name: Download NuGet package
+      uses: actions/download-artifact@v8
+      with:
+        name: nuget-package
+        path: ./nuget
+    - name: NuGet login (Trusted Publishing)
+      uses: NuGet/login@v1
+      id: nugetLogin
+      with:
+        user: ${{ secrets.NUGET_USER }}
+    - name: NugetPush
+      run: |
+        dotnet nuget push ./nuget/*.nupkg --skip-duplicate --api-key ${{ steps.nugetLogin.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+    - name: Github release
+      shell: bash
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh release create ${{ env.CURRENT_VERSION }} ./nuget/*.*nupkg --repo ${{ github.repository }} --target ${{ github.sha }} --generate-notes
 
   deployTest:
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' }}
     needs: build
+    runs-on: ubuntu-latest
     permissions:
-      contents: read
       id-token: write # NuGet Trusted Publishing (OIDC)
-    env:
-      NUGET_TEST_USER: ${{ secrets.NUGET_TEST_USER }}
     steps:
-      - uses: actions/checkout@v7
-        if: env.NUGET_TEST_USER != ''
-      - name: Download build artifacts
-        if: env.NUGET_TEST_USER != ''
-        uses: actions/download-artifact@v8
-        with:
-          name: build-artifacts
-      - name: NuGet test login (Trusted Publishing)
-        if: env.NUGET_TEST_USER != ''
-        uses: NuGet/login@v1
-        id: nugetLogin
-        with:
-          user: ${{ secrets.NUGET_TEST_USER }}
-          token-service-url: https://int.nugettest.org/api/v2/token
-          audience: https://int.nugettest.org
-      - name: NugetPush
-        if: env.NUGET_TEST_USER != ''
-        run: |
-          dotnet nuget push *.nupkg --skip-duplicate --api-key ${{ steps.nugetLogin.outputs.NUGET_API_KEY }} --source https://apiint.nugettest.org/v3/index.json
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v6
+      with:
+        dotnet-version: |
+          10.0.x
+    - name: Download NuGet package
+      uses: actions/download-artifact@v8
+      with:
+        name: nuget-package
+        path: ./nuget
+    - name: NuGet login (Trusted Publishing)
+      uses: NuGet/login@v1
+      id: nugetLogin
+      with:
+        user: ${{ secrets.NUGET_TEST_USER }}
+        token-service-url: https://int.nugettest.org/api/v2/token
+        audience: https://int.nugettest.org
+    - name: NugetPush
+      run: |
+        dotnet nuget push ./nuget/*.nupkg --skip-duplicate --api-key ${{ steps.nugetLogin.outputs.NUGET_API_KEY }} --source https://apiint.nugettest.org/v3/index.json
